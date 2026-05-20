@@ -83,6 +83,7 @@ export const communityService = {
   getOne: (id: string) => api.get(`/communities/${id}`),
   create: (data: any) => api.post('/communities', data),
   update: (id: string, data: any) => api.patch(`/communities/${id}`, data),
+  submitKyc: (id: string, kycDocumentUrl: string) => api.post(`/communities/${id}/kyc`, { kycDocumentUrl }),
 
   // Members & Invitations
   getMembers: (communityId: string) => api.get(`/communities/${communityId}/members`),
@@ -163,6 +164,13 @@ export const storageService = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+};
+
+export const moderationService = {
+  getCommunityReports: (communityId: string, status?: string) =>
+    api.get(`/moderation/communities/${communityId}/reports`, { params: status ? { status } : {} }),
+  updateCommunityReport: (communityId: string, reportId: string, data: { actionTaken: string; note?: string }) =>
+    api.patch(`/moderation/communities/${communityId}/reports/${reportId}`, data),
 };
 
 export default api;
