@@ -83,7 +83,7 @@ export const communityService = {
   getOne: (id: string) => api.get(`/communities/${id}`),
   create: (data: any) => api.post('/communities', data),
   update: (id: string, data: any) => api.patch(`/communities/${id}`, data),
-  submitKyc: (id: string, kycDocumentUrl: string) => api.post(`/communities/${id}/kyc`, { kycDocumentUrl }),
+  submitKyc: (id: string, kycDocumentUrl: string, kycDescription: string) => api.post(`/communities/${id}/kyc`, { kycDocumentUrl, kycDescription }),
 
   // Members & Invitations
   getMembers: (communityId: string) => api.get(`/communities/${communityId}/members`),

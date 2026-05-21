@@ -31,11 +31,15 @@ const CommunitySettings = () => {
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [widgets, setWidgets] = useState<any[]>([]);
   const [kycUrl, setKycUrl] = useState('');
+  const [kycDescription, setKycDescription] = useState('');
   const [submittingKyc, setSubmittingKyc] = useState(false);
 
   useEffect(() => {
     if (community?.kycDocumentUrl) {
       setKycUrl(community.kycDocumentUrl);
+    }
+    if (community?.kycDescription) {
+      setKycDescription(community.kycDescription);
     }
   }, [community]);
 
@@ -54,6 +58,8 @@ const CommunitySettings = () => {
         communityService.getWidgets(selectedCommunityId).catch(() => ({ data: [] }))
       ]);
       setCommunity(commRes.data);
+      if (commRes.data?.kycDocumentUrl) setKycUrl(commRes.data.kycDocumentUrl);
+      if (commRes.data?.kycDescription) setKycDescription(commRes.data.kycDescription);
       setMembers(membersRes.data || []);
       setPendingRequests(requestsRes.data || []);
       setWidgets(widgetsRes.data || [
@@ -87,12 +93,13 @@ const CommunitySettings = () => {
     }
     try {
       setSubmittingKyc(true);
-      await communityService.submitKyc(selectedCommunityId!, kycUrl);
+      await communityService.submitKyc(selectedCommunityId!, kycUrl, kycDescription);
       toast.success('Documents KYC soumis avec succès !');
       setCommunity({
         ...community,
         kycStatus: 'pending',
         kycDocumentUrl: kycUrl,
+        kycDescription: kycDescription,
         kycRejectionReason: null
       });
     } catch (err) {
@@ -280,7 +287,7 @@ const CommunitySettings = () => {
                     {community?.kycStatus === 'verified' && 'Votre communauté est certifiée. Vous bénéficiez d\'une visibilité accrue et de toutes les fonctionnalités de paiement.'}
                     {community?.kycStatus === 'pending' && 'Nos administrateurs examinent actuellement vos documents. Ce processus prend généralement 24 à 48 heures.'}
                     {community?.kycStatus === 'rejected' && 'La validation a été refusée. Veuillez vérifier les détails ci-dessous.'}
-                    {(!community?.kycStatus || community?.kycStatus === 'unsubmitted') && 'Soumettez vos documents officiels (statuts d\'association, pièce d\'identité) pour faire certifier votre communauté.'}
+                    {(!community?.kycStatus || community?.kycStatus === 'none' || community?.kycStatus === 'unsubmitted') && 'Soumettez vos documents officiels (statuts d\'association, pièce d\'identité) pour faire certifier votre communauté.'}
                   </p>
                 </div>
               </div>
@@ -294,7 +301,7 @@ const CommunitySettings = () => {
               )}
 
               {/* Formulaire de soumission */}
-              {(community?.kycStatus === 'unsubmitted' || !community?.kycStatus || community?.kycStatus === 'rejected') ? (
+              {(community?.kycStatus === 'none' || community?.kycStatus === 'unsubmitted' || !community?.kycStatus || community?.kycStatus === 'rejected') ? (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">URL du Document de Justification (PDF, Image...)</Label>
@@ -303,6 +310,15 @@ const CommunitySettings = () => {
                       value={kycUrl}
                       onChange={(e) => setKycUrl(e.target.value)}
                       className="h-9 text-xs font-bold" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description ou texte d'accompagnement</Label>
+                    <textarea 
+                      placeholder="Décrivez votre association et vos objectifs..." 
+                      value={kycDescription}
+                      onChange={(e) => setKycDescription(e.target.value)}
+                      className="w-full min-h-[80px] rounded-lg border border-gray-100 bg-gray-50/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" 
                     />
                   </div>
                   <Button 
@@ -316,13 +332,23 @@ const CommunitySettings = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Document soumis</Label>
-                  <div className="text-xs font-bold text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100 truncate">
-                    <a href={community?.kycDocumentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                      {community?.kycDocumentUrl}
-                    </a>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Document soumis</Label>
+                    <div className="text-xs font-bold text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100 truncate">
+                      <a href={community?.kycDocumentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        {community?.kycDocumentUrl}
+                      </a>
+                    </div>
                   </div>
+                  {community?.kycDescription && (
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description soumise</Label>
+                      <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap">
+                        {community.kycDescription}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
