@@ -18,7 +18,7 @@ import {
   Share2
 } from 'lucide-react';
 import { ModerationChat } from '@/components/ModerationChat';
-import { postService, commentService } from '../services/api';
+import { postService, commentService, moderationService } from '../services/api';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -346,6 +346,8 @@ const Moderation = () => {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('posts');
   const [posts, setPosts] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
+  const [reportsFilter, setReportsFilter] = useState<'all' | 'pending' | 'resolved' | 'dismissed'>('pending');
 
   useEffect(() => { 
     if (selectedCommunityId) {
@@ -357,8 +359,12 @@ const Moderation = () => {
     if (!selectedCommunityId) return;
     try {
       setLoading(true);
-      const postsRes = await postService.getAll(selectedCommunityId);
+      const [postsRes, reportsRes] = await Promise.all([
+        postService.getAll(selectedCommunityId),
+        moderationService.getCommunityReports(selectedCommunityId),
+      ]);
       setPosts(postsRes.data || []);
+      setReports(reportsRes.data || []);
     } catch (err) { 
       toast.error('Erreur chargement'); 
     } finally { 
@@ -377,7 +383,48 @@ const Moderation = () => {
     }
   };
 
+  const handleProcessReport = async (reportId: string, action: 'dismissed' | 'deleted' | 'kicked' | 'muted') => {
+    if (!selectedCommunityId) return;
+    const confirmMessage = {
+      dismissed: 'Ignorer ce signalement ?',
+      deleted: 'Supprimer ce contenu ?',
+      kicked: 'Exclure cet utilisateur de la communauté ?',
+      muted: 'Rendre cet utilisateur muet dans la communauté ?'
+    }[action];
+    
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      await moderationService.updateCommunityReport(selectedCommunityId, reportId, {
+        actionTaken: action,
+        note: `Traité par le CM via l'interface d'administration.`
+      });
+      toast.success('Signalement traité avec succès');
+      
+      // Mettre à jour l'état local
+      setReports(reports.map(r => r.id === reportId ? { ...r, status: action === 'dismissed' ? 'dismissed' : 'resolved', actionTaken: action } : r));
+      
+      // Si l'action est supprimé et qu'il s'agit d'un post, on le retire aussi de l'état des posts si présent
+      if (action === 'deleted') {
+        const rep = reports.find(r => r.id === reportId);
+        if (rep && rep.type === 'post' && rep.targetPost) {
+          setPosts(posts.filter(p => p.id !== rep.targetPost.id));
+        }
+      }
+    } catch (err) {
+      toast.error('Erreur lors du traitement du signalement');
+    }
+  };
+
   const [selectedPostForComments, setSelectedPostForComments] = useState<any | null>(null);
+
+  const filteredReports = reports.filter(r => {
+    if (reportsFilter === 'all') return true;
+    if (reportsFilter === 'pending') return r.status === 'pending';
+    if (reportsFilter === 'resolved') return r.status === 'resolved';
+    if (reportsFilter === 'dismissed') return r.status === 'dismissed';
+    return true;
+  });
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -466,15 +513,170 @@ const Moderation = () => {
         </TabsContent>
 
         <TabsContent value="reports" className="outline-none">
-          <Card className="border-none shadow-sm bg-white rounded-3xl py-24 text-center space-y-6 border border-gray-50">
-            <div className="h-24 w-24 rounded-full bg-green-50 flex items-center justify-center mx-auto shadow-inner border border-green-100/50">
-              <ShieldAlert size={44} className="text-green-500" />
+          <div className="space-y-6">
+            <div className="flex justify-between items-center bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100">
+              <div className="flex gap-1.5">
+                {(['pending', 'resolved', 'dismissed', 'all'] as const).map((status) => (
+                  <Button
+                    key={status}
+                    variant={reportsFilter === status ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setReportsFilter(status)}
+                    className="h-8 rounded-lg text-[10px] font-bold uppercase tracking-tight"
+                  >
+                    {status === 'pending' && 'En attente'}
+                    {status === 'resolved' && 'Résolus'}
+                    {status === 'dismissed' && 'Ignorés'}
+                    {status === 'all' && 'Tous'}
+                  </Button>
+                ))}
+              </div>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-2">
+                {filteredReports.length} Signalements
+              </span>
             </div>
-            <div className="max-w-xs mx-auto px-4">
-              <h4 className="text-xl font-black text-[#1a1a1a] tracking-tight">Espace sécurisé</h4>
-              <p className="text-[11px] text-muted-foreground font-medium leading-relaxed mt-2 uppercase tracking-wide">Tout est sous contrôle. Aucun signalement en attente de modération.</p>
-            </div>
-          </Card>
+
+            {filteredReports.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredReports.map((report) => (
+                  <Card key={report.id} className="border-none shadow-sm bg-white rounded-3xl p-5 border border-gray-50 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      {/* En-tête du signalement */}
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-primary/10 text-primary uppercase tracking-tight">
+                            {report.type}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-500 uppercase tracking-tight">
+                            {report.reason}
+                          </span>
+                        </div>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tight",
+                          report.status === 'pending' ? "bg-amber-50 text-amber-500" :
+                          report.status === 'resolved' ? "bg-green-50 text-green-500" : "bg-gray-100 text-gray-500"
+                        )}>
+                          {report.status === 'pending' && 'En attente'}
+                          {report.status === 'resolved' && 'Résolu'}
+                          {report.status === 'dismissed' && 'Ignoré'}
+                        </span>
+                      </div>
+
+                      {/* Info reporter et date */}
+                      <div className="text-[10px] text-gray-400 font-medium">
+                        Signalé par <span className="font-bold text-gray-600">{report.reporter?.name || 'Utilisateur'}</span> • {formatRelativeTime(report.createdAt)}
+                      </div>
+
+                      {/* Détails du signalement */}
+                      {report.details && (
+                        <p className="text-[11px] text-gray-500 font-medium bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
+                          "{report.details}"
+                        </p>
+                      )}
+
+                      {/* Aperçu du contenu ciblé */}
+                      <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100/50 space-y-2">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Contenu ciblé</p>
+                        
+                        {report.type === 'post' && report.targetPost && (
+                          <div className="text-xs font-semibold text-gray-700 leading-snug">
+                            {report.targetPost.content}
+                          </div>
+                        )}
+                        {report.type === 'comment' && report.targetComment && (
+                          <div className="text-xs font-semibold text-gray-700 leading-snug">
+                            {report.targetComment.content}
+                          </div>
+                        )}
+                        {report.type === 'chat' && report.targetChat && (
+                          <div className="text-xs font-semibold text-gray-700 leading-snug">
+                            {report.targetChat.content}
+                          </div>
+                        )}
+                        {report.type === 'user' && report.targetUser && (
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-7 w-7 rounded-full">
+                              <AvatarImage src={report.targetUser.avatar} />
+                              <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
+                                {report.targetUser.name?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-xs font-bold text-gray-700">{report.targetUser.name}</p>
+                              <p className="text-[9px] text-gray-400">@{report.targetUser.username}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Notes de modération */}
+                      {report.status !== 'pending' && (
+                        <div className="text-[10px] text-gray-400 bg-green-50/10 p-2 rounded-xl border border-green-100/30">
+                          <span className="font-bold">Action prise :</span> {report.actionTaken}
+                          {report.note && <p className="mt-1 italic">"{report.note}"</p>}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions de modération local */}
+                    {report.status === 'pending' && (
+                      <div className="flex flex-wrap gap-1.5 mt-5 border-t border-gray-100 pt-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleProcessReport(report.id, 'dismissed')}
+                          className="h-8 text-[9px] font-bold uppercase tracking-tight bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg flex-1"
+                        >
+                          Ignorer
+                        </Button>
+                        
+                        {(report.type === 'post' || report.type === 'comment' || report.type === 'chat') && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleProcessReport(report.id, 'deleted')}
+                            className="h-8 text-[9px] font-bold uppercase tracking-tight rounded-lg flex-1"
+                          >
+                            Supprimer
+                          </Button>
+                        )}
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleProcessReport(report.id, 'muted')}
+                          className="h-8 text-[9px] font-bold uppercase tracking-tight border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-lg flex-1"
+                        >
+                          Mute
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleProcessReport(report.id, 'kicked')}
+                          className="h-8 text-[9px] font-bold uppercase tracking-tight border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg flex-1"
+                        >
+                          Exclure
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-none shadow-sm bg-white rounded-3xl py-20 text-center space-y-6 border border-gray-50">
+                <div className="h-20 w-20 rounded-full bg-green-50 flex items-center justify-center mx-auto shadow-inner border border-green-100/50">
+                  <ShieldAlert size={36} className="text-green-500" />
+                </div>
+                <div className="max-w-xs mx-auto px-4">
+                  <h4 className="text-sm font-black text-[#1a1a1a] tracking-tight">Aucun signalement</h4>
+                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed mt-2 uppercase tracking-wide">
+                    {reportsFilter === 'pending' ? 'Aucun signalement en attente de traitement.' : 'Aucun signalement trouvé pour ce filtre.'}
+                  </p>
+                </div>
+              </Card>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 

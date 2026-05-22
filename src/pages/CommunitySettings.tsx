@@ -30,6 +30,18 @@ const CommunitySettings = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [widgets, setWidgets] = useState<any[]>([]);
+  const [kycUrl, setKycUrl] = useState('');
+  const [kycDescription, setKycDescription] = useState('');
+  const [submittingKyc, setSubmittingKyc] = useState(false);
+
+  useEffect(() => {
+    if (community?.kycDocumentUrl) {
+      setKycUrl(community.kycDocumentUrl);
+    }
+    if (community?.kycDescription) {
+      setKycDescription(community.kycDescription);
+    }
+  }, [community]);
 
   useEffect(() => {
     if (selectedCommunityId) fetchData();
@@ -46,6 +58,8 @@ const CommunitySettings = () => {
         communityService.getWidgets(selectedCommunityId).catch(() => ({ data: [] }))
       ]);
       setCommunity(commRes.data);
+      if (commRes.data?.kycDocumentUrl) setKycUrl(commRes.data.kycDocumentUrl);
+      if (commRes.data?.kycDescription) setKycDescription(commRes.data.kycDescription);
       setMembers(membersRes.data || []);
       setPendingRequests(requestsRes.data || []);
       setWidgets(widgetsRes.data || [
@@ -72,6 +86,29 @@ const CommunitySettings = () => {
     } catch (err) { toast.error('Erreur'); }
   };
 
+  const handleSubmitKyc = async () => {
+    if (!kycUrl.trim()) {
+      toast.error('Veuillez saisir l\'URL du document de validation');
+      return;
+    }
+    try {
+      setSubmittingKyc(true);
+      await communityService.submitKyc(selectedCommunityId!, kycUrl, kycDescription);
+      toast.success('Documents KYC soumis avec succès !');
+      setCommunity({
+        ...community,
+        kycStatus: 'pending',
+        kycDocumentUrl: kycUrl,
+        kycDescription: kycDescription,
+        kycRejectionReason: null
+      });
+    } catch (err) {
+      toast.error('Erreur lors de la soumission du KYC');
+    } finally {
+      setSubmittingKyc(false);
+    }
+  };
+
   if (!selectedCommunityId) return <div className="flex flex-col items-center justify-center min-h-[60vh] opacity-30"><Settings size={48} /><h2 className="text-xl font-bold mt-4">Sélectionnez une communauté</h2></div>;
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 size={32} className="animate-spin text-primary opacity-40" /></div>;
 
@@ -94,6 +131,9 @@ const CommunitySettings = () => {
           <TabsTrigger value="widgets" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">Modules</TabsTrigger>
           <TabsTrigger value="requests" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200 relative">
             Requêtes {pendingRequests.length > 0 && <span className="ml-1.5 bg-primary text-white text-[8px] px-1 rounded-full">{pendingRequests.length}</span>}
+          </TabsTrigger>
+          <TabsTrigger value="kyc" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">
+            KYC
           </TabsTrigger>
         </TabsList>
 
@@ -212,6 +252,103 @@ const CommunitySettings = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="kyc" className="space-y-6">
+          <Card className="border-none shadow-sm bg-white rounded-2xl border border-gray-50 overflow-hidden">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="text-sm font-bold">Certification Officielle de la Communauté</CardTitle>
+              <CardDescription className="text-[10px] font-medium uppercase tracking-tight opacity-50">Processus de vérification KYC</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5 pt-4 space-y-6">
+              {/* Statut actuel */}
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50/50 border border-gray-100">
+                <div className={cn(
+                  "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner",
+                  community?.kycStatus === 'verified' ? "bg-green-50 text-green-500" :
+                  community?.kycStatus === 'pending' ? "bg-amber-50 text-amber-500" :
+                  community?.kycStatus === 'rejected' ? "bg-red-50 text-red-500" : "bg-gray-100 text-gray-400"
+                )}>
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wide">
+                    Statut : {
+                      community?.kycStatus === 'verified' ? 'Certifié' :
+                      community?.kycStatus === 'pending' ? 'Examen en cours' :
+                      community?.kycStatus === 'rejected' ? 'Rejeté' : 'Non soumis'
+                    }
+                  </h4>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {community?.kycStatus === 'verified' && 'Votre communauté est certifiée. Vous bénéficiez d\'une visibilité accrue et de toutes les fonctionnalités de paiement.'}
+                    {community?.kycStatus === 'pending' && 'Nos administrateurs examinent actuellement vos documents. Ce processus prend généralement 24 à 48 heures.'}
+                    {community?.kycStatus === 'rejected' && 'La validation a été refusée. Veuillez vérifier les détails ci-dessous.'}
+                    {(!community?.kycStatus || community?.kycStatus === 'none' || community?.kycStatus === 'unsubmitted') && 'Soumettez vos documents officiels (statuts d\'association, pièce d\'identité) pour faire certifier votre communauté.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Motif de rejet */}
+              {community?.kycStatus === 'rejected' && community?.kycRejectionReason && (
+                <div className="p-4 rounded-xl bg-red-50/50 border border-red-100 text-red-700 space-y-1">
+                  <h5 className="text-[10px] font-black uppercase tracking-wider">Motif du refus</h5>
+                  <p className="text-xs font-medium">"{community.kycRejectionReason}"</p>
+                </div>
+              )}
+
+              {/* Formulaire de soumission */}
+              {(community?.kycStatus === 'none' || community?.kycStatus === 'unsubmitted' || !community?.kycStatus || community?.kycStatus === 'rejected') ? (
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">URL du Document de Justification (PDF, Image...)</Label>
+                    <Input 
+                      placeholder="https://example.com/justificatif.pdf" 
+                      value={kycUrl}
+                      onChange={(e) => setKycUrl(e.target.value)}
+                      className="h-9 text-xs font-bold" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description ou texte d'accompagnement</Label>
+                    <textarea 
+                      placeholder="Décrivez votre association et vos objectifs..." 
+                      value={kycDescription}
+                      onChange={(e) => setKycDescription(e.target.value)}
+                      className="w-full min-h-[80px] rounded-lg border border-gray-100 bg-gray-50/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" 
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleSubmitKyc} 
+                    disabled={submittingKyc}
+                    size="sm" 
+                    className="h-9 px-5 rounded-xl font-bold gap-2 shadow-md shadow-primary/10"
+                  >
+                    {submittingKyc && <Loader2 size={14} className="animate-spin" />}
+                    Soumettre pour validation
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Document soumis</Label>
+                    <div className="text-xs font-bold text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100 truncate">
+                      <a href={community?.kycDocumentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        {community?.kycDocumentUrl}
+                      </a>
+                    </div>
+                  </div>
+                  {community?.kycDescription && (
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description soumise</Label>
+                      <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap">
+                        {community.kycDescription}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
