@@ -8,7 +8,10 @@ import {
   LogOut,
   Loader2,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Store,
+  Layers,
+  Code2,
 } from 'lucide-react';
 import {
   Select,
@@ -26,6 +29,9 @@ import Analytics from './pages/Analytics';
 import CommunitySettings from './pages/CommunitySettings';
 import Moderation from './pages/Moderation';
 import Login from './pages/Login';
+import Marketplace from './pages/Marketplace';
+import PageBuilderPage from './pages/PageBuilder';
+import Developer from './pages/Developer';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CommunityProvider, useCommunity } from './context/CommunityContext';
 import { Button } from "@/components/ui/button";
@@ -106,6 +112,12 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <SidebarLink to="/analytics" icon={BarChart3} label="Statistiques" active={location.pathname === '/analytics'} />
           <SidebarLink to="/moderation" icon={ShieldAlert} label="Modération" active={location.pathname === '/moderation'} />
           <SidebarLink to="/settings" icon={Settings} label="Paramètres" active={location.pathname === '/settings'} />
+
+          <div className="my-2 border-t border-border/50" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 mb-1">Communauté</p>
+          <SidebarLink to="/marketplace" icon={Store} label="Marketplace" active={location.pathname === '/marketplace'} />
+          <SidebarLink to="/page-builder" icon={Layers} label="Page Builder" active={location.pathname === '/page-builder'} />
+          <SidebarLink to="/developer" icon={Code2} label="Espace Développeur" active={location.pathname === '/developer'} />
         </nav>
 
         <div className="mt-auto">
@@ -164,6 +176,9 @@ function App() {
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/moderation" element={<ProtectedRoute><Moderation /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+              <Route path="/page-builder" element={<ProtectedRoute><PageBuilderPage /></ProtectedRoute>} />
+              <Route path="/developer" element={<ProtectedRoute><Developer /></ProtectedRoute>} />
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
