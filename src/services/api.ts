@@ -83,7 +83,26 @@ export const communityService = {
   getOne: (id: string) => api.get(`/communities/${id}`),
   create: (data: any) => api.post('/communities', data),
   update: (id: string, data: any) => api.patch(`/communities/${id}`, data),
-  submitKyc: (id: string, kycDocumentUrl: string, kycDescription: string) => api.post(`/communities/${id}/kyc`, { kycDocumentUrl, kycDescription }),
+  submitKyc: (
+    id: string,
+    kycDocumentUrl: string,
+    kycDescription: string,
+    associationType?: string,
+    officialName?: string,
+    registrationNumber?: string,
+    declarantRole?: string,
+    representativeName?: string,
+    headquartersAddress?: string
+  ) => api.post(`/communities/${id}/kyc`, {
+    kycDocumentUrl,
+    kycDescription,
+    associationType,
+    officialName,
+    registrationNumber,
+    declarantRole,
+    representativeName,
+    headquartersAddress
+  }),
 
   // Members & Invitations
   getMembers: (communityId: string) => api.get(`/communities/${communityId}/members`),
@@ -173,4 +192,54 @@ export const moderationService = {
     api.patch(`/moderation/communities/${communityId}/reports/${reportId}`, data),
 };
 
+// ============================================
+// Widget Library (Marketplace + Developer)
+// ============================================
+export const widgetLibraryService = {
+  /** Widgets validés publics — Marketplace */
+  getMarketplace: () => api.get('/widget-library/marketplace'),
+  /** Mes propres widgets (tous statuts) */
+  getMyWidgets: () => api.get('/widget-library/my-widgets'),
+  /** Créer un widget */
+  create: (data: any) => api.post('/widget-library', data),
+  /** Mettre à jour un widget (ex: soumission en pending) */
+  update: (id: string, data: any) => api.patch(`/widget-library/${id}`, data),
+  /** Supprimer un widget */
+  delete: (id: string) => api.delete(`/widget-library/${id}`),
+};
+
+// ============================================
+// Widget Installations
+// ============================================
+export const widgetInstallationService = {
+  /** Installer un widget dans une communauté */
+  install: (widgetId: string, communityId: string, grantedPermissions: string[] = []) =>
+    api.post('/widget-installations', { widgetId, communityId, grantedPermissions }),
+  /** Widgets installés dans une communauté */
+  getByCommunity: (communityId: string) =>
+    api.get(`/widget-installations/community/${communityId}`),
+};
+
+// ============================================
+// Pages (Page Builder)
+// ============================================
+export const pageService = {
+  /** Pages de la communauté */
+  getByCommunity: (communityId: string, status?: 'draft' | 'published') =>
+    api.get(`/pages/community/${communityId}`, { params: status ? { status } : {} }),
+  /** Une page */
+  getOne: (id: string) => api.get(`/pages/${id}`),
+  /** Créer une page */
+  create: (data: { name: string; layout: any; status?: 'draft' | 'published'; communityId?: string }) =>
+    api.post('/pages', data),
+  /** Mettre à jour une page */
+  update: (id: string, data: any) => api.patch(`/pages/${id}`, data),
+  /** Supprimer une page */
+  delete: (id: string) => api.delete(`/pages/${id}`),
+  /** Page publiée d'une communauté */
+  getPublished: (communityId: string) =>
+    api.get(`/pages/community/${communityId}/published`),
+};
+
 export default api;
+

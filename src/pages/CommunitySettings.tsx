@@ -9,7 +9,8 @@ import {
   Save,
   Loader2,
   Trash2,
-  Plus
+  Plus,
+  ExternalLink
 } from 'lucide-react';
 import { communityService } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,6 +35,14 @@ const CommunitySettings = () => {
   const [kycDescription, setKycDescription] = useState('');
   const [submittingKyc, setSubmittingKyc] = useState(false);
 
+  // Optional registration KYC fields
+  const [associationType, setAssociationType] = useState('student_org');
+  const [officialName, setOfficialName] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState('');
+  const [declarantRole, setDeclarantRole] = useState('president');
+  const [representativeName, setRepresentativeName] = useState('');
+  const [headquartersAddress, setHeadquartersAddress] = useState('');
+
   useEffect(() => {
     if (community?.kycDocumentUrl) {
       setKycUrl(community.kycDocumentUrl);
@@ -41,6 +50,12 @@ const CommunitySettings = () => {
     if (community?.kycDescription) {
       setKycDescription(community.kycDescription);
     }
+    setAssociationType(community?.associationType || 'student_org');
+    setOfficialName(community?.officialName || '');
+    setRegistrationNumber(community?.registrationNumber || '');
+    setDeclarantRole(community?.declarantRole || 'president');
+    setRepresentativeName(community?.representativeName || '');
+    setHeadquartersAddress(community?.headquartersAddress || '');
   }, [community]);
 
   useEffect(() => {
@@ -91,16 +106,36 @@ const CommunitySettings = () => {
       toast.error('Veuillez saisir l\'URL du document de validation');
       return;
     }
+    if (!kycDescription.trim()) {
+      toast.error('Veuillez saisir une description pour votre dossier');
+      return;
+    }
     try {
       setSubmittingKyc(true);
-      await communityService.submitKyc(selectedCommunityId!, kycUrl, kycDescription);
-      toast.success('Documents KYC soumis avec succès !');
+      await communityService.submitKyc(
+        selectedCommunityId!,
+        kycUrl,
+        kycDescription,
+        associationType,
+        officialName,
+        registrationNumber,
+        declarantRole,
+        representativeName,
+        headquartersAddress
+      );
+      toast.success('Dossier KYC soumis avec succès !');
       setCommunity({
         ...community,
         kycStatus: 'pending',
         kycDocumentUrl: kycUrl,
         kycDescription: kycDescription,
-        kycRejectionReason: null
+        kycRejectionReason: null,
+        associationType,
+        officialName,
+        registrationNumber,
+        declarantRole,
+        representativeName,
+        headquartersAddress
       });
     } catch (err) {
       toast.error('Erreur lors de la soumission du KYC');
@@ -303,24 +338,99 @@ const CommunitySettings = () => {
               {/* Formulaire de soumission */}
               {(community?.kycStatus === 'none' || community?.kycStatus === 'unsubmitted' || !community?.kycStatus || community?.kycStatus === 'rejected') ? (
                 <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">URL du Document de Justification (PDF, Image...)</Label>
-                    <Input 
-                      placeholder="https://example.com/justificatif.pdf" 
-                      value={kycUrl}
-                      onChange={(e) => setKycUrl(e.target.value)}
-                      className="h-9 text-xs font-bold" 
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Type d'entité (Optionnel)</Label>
+                      <select
+                        value={associationType}
+                        onChange={(e) => setAssociationType(e.target.value)}
+                        className="flex h-9 w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 outline-none focus:border-primary/50 transition-colors"
+                      >
+                        <option value="student_org">Association étudiante (Loi 1901)</option>
+                        <option value="bde">Bureau des Élèves (BDE)</option>
+                        <option value="sports_club">Club sportif / AS</option>
+                        <option value="independent">Indépendant / Entreprise</option>
+                        <option value="other">Autre structure</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Nom officiel de l'entité (Optionnel)</Label>
+                      <Input 
+                        placeholder="Ex: Association BDE ESGI Paris" 
+                        value={officialName}
+                        onChange={(e) => setOfficialName(e.target.value)}
+                        className="h-9 text-xs font-semibold" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Numéro d'immatriculation RNA / SIRET (Optionnel)</Label>
+                      <Input 
+                        placeholder="Ex: W123456789 ou Siret" 
+                        value={registrationNumber}
+                        onChange={(e) => setRegistrationNumber(e.target.value)}
+                        className="h-9 text-xs font-semibold font-mono" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Rôle du déclarant (Optionnel)</Label>
+                      <select
+                        value={declarantRole}
+                        onChange={(e) => setDeclarantRole(e.target.value)}
+                        className="flex h-9 w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 outline-none focus:border-primary/50 transition-colors"
+                      >
+                        <option value="president">Président(e)</option>
+                        <option value="treasurer">Trésorier(e)</option>
+                        <option value="secretary">Secrétaire</option>
+                        <option value="board_member">Membre du bureau</option>
+                        <option value="other">Autre / Représentant</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Nom complet du signataire / déclarant (Optionnel)</Label>
+                      <Input 
+                        placeholder="Ex: Jean Dupont" 
+                        value={representativeName}
+                        onChange={(e) => setRepresentativeName(e.target.value)}
+                        className="h-9 text-xs font-semibold" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Adresse du siège social (Optionnel)</Label>
+                      <Input 
+                        placeholder="Ex: 242 Rue du Faubourg Saint-Antoine, 75012 Paris" 
+                        value={headquartersAddress}
+                        onChange={(e) => setHeadquartersAddress(e.target.value)}
+                        className="h-9 text-xs font-semibold" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 col-span-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">URL du Document de Justification (PDF, Image...) (Optionnel)</Label>
+                      <Input 
+                        placeholder="https://example.com/justificatif.pdf" 
+                        value={kycUrl}
+                        onChange={(e) => setKycUrl(e.target.value)}
+                        className="h-9 text-xs font-bold" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 col-span-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description ou texte d'accompagnement *</Label>
+                      <textarea 
+                        placeholder="Décrivez votre association, vos objectifs, et justifiez votre demande de certification..." 
+                        value={kycDescription}
+                        onChange={(e) => setKycDescription(e.target.value)}
+                        className="w-full min-h-[100px] rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 outline-none resize-none focus:border-primary/50 transition-colors" 
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description ou texte d'accompagnement</Label>
-                    <textarea 
-                      placeholder="Décrivez votre association et vos objectifs..." 
-                      value={kycDescription}
-                      onChange={(e) => setKycDescription(e.target.value)}
-                      className="w-full min-h-[80px] rounded-lg border border-gray-100 bg-gray-50/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" 
-                    />
-                  </div>
+
                   <Button 
                     onClick={handleSubmitKyc} 
                     disabled={submittingKyc}
@@ -332,20 +442,60 @@ const CommunitySettings = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Document soumis</Label>
-                    <div className="text-xs font-bold text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100 truncate">
-                      <a href={community?.kycDocumentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                        {community?.kycDocumentUrl}
-                      </a>
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100 text-xs">
+                    <div>
+                      <span className="text-muted-foreground block text-[9px] uppercase font-bold tracking-wider">Type d'entité</span>
+                      <span className="font-semibold text-gray-800">
+                        {community?.associationType === 'student_org' ? 'Association étudiante (Loi 1901)' :
+                         community?.associationType === 'bde' ? 'Bureau des Élèves (BDE)' :
+                         community?.associationType === 'sports_club' ? 'Club sportif / AS' :
+                         community?.associationType === 'independent' ? 'Indépendant / Entreprise' : 'Non spécifié'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[9px] uppercase font-bold tracking-wider">Nom officiel</span>
+                      <span className="font-semibold text-gray-800">{community?.officialName || 'Non spécifié'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[9px] uppercase font-bold tracking-wider">Immatriculation (RNA/SIRET)</span>
+                      <span className="font-semibold text-gray-800 font-mono">{community?.registrationNumber || 'Non spécifié'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[9px] uppercase font-bold tracking-wider">Déclarant / Rôle</span>
+                      <span className="font-semibold text-gray-800">
+                        {community?.representativeName || 'Non spécifié'} 
+                        {community?.declarantRole ? ` (${
+                          community.declarantRole === 'president' ? 'Président(e)' :
+                          community.declarantRole === 'treasurer' ? 'Trésorier(e)' :
+                          community.declarantRole === 'secretary' ? 'Secrétaire' :
+                          community.declarantRole === 'board_member' ? 'Membre du bureau' : 'Autre'
+                        })` : ''}
+                      </span>
+                    </div>
+                    <div className="sm:col-span-2 border-t border-gray-200/50 pt-2">
+                      <span className="text-muted-foreground block text-[9px] uppercase font-bold tracking-wider">Adresse du siège social</span>
+                      <span className="font-semibold text-gray-800">{community?.headquartersAddress || 'Non spécifiée'}</span>
                     </div>
                   </div>
+
                   {community?.kycDescription && (
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description soumise</Label>
                       <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap">
                         {community.kycDescription}
+                      </div>
+                    </div>
+                  )}
+
+                  {community?.kycDocumentUrl && (
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Document soumis</Label>
+                      <div className="text-xs font-bold text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100 truncate flex items-center justify-between">
+                        <a href={community.kycDocumentUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate mr-2">
+                          {community.kycDocumentUrl}
+                        </a>
+                        <ExternalLink size={12} className="text-gray-400 shrink-0" />
                       </div>
                     </div>
                   )}
