@@ -10,8 +10,7 @@ import {
   Loader2,
   Trash2,
   Plus,
-  ExternalLink,
-  FileText
+  ExternalLink
 } from 'lucide-react';
 import { communityService } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
