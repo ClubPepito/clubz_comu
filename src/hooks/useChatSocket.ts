@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:3000/chats';
+const getSocketUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.includes('thomasgllt.fr')) {
+      const protocol = window.location.protocol;
+      return `${protocol}//api-clubz.thomasgllt.fr/chats`;
+    }
+  }
+  const apiBase = (import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:3000/api';
+  return apiBase.replace(/\/api$/, '') + '/chats';
+};
+
+const SOCKET_URL = getSocketUrl();
 
 export const useChatSocket = (roomId: string | null) => {
   const socketRef = useRef<Socket | null>(null);
