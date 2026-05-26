@@ -11,7 +11,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (token: string, user: User) => void;
+  login: (token: string, user: User, refreshToken?: string) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -35,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (err) {
           console.error('Failed to init auth', err);
           localStorage.removeItem('clubz_token');
+          localStorage.removeItem('clubz_refresh_token');
           setToken(null);
           setUser(null);
         }
@@ -45,14 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = (newToken: string, newUser: User) => {
+  const login = (newToken: string, newUser: User, newRefreshToken?: string) => {
     localStorage.setItem('clubz_token', newToken);
+    if (newRefreshToken) {
+      localStorage.setItem('clubz_refresh_token', newRefreshToken);
+    }
     setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
     localStorage.removeItem('clubz_token');
+    localStorage.removeItem('clubz_refresh_token');
     setToken(null);
     setUser(null);
   };
