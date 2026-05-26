@@ -32,14 +32,75 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle 401 errors
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Add a response interceptor to handle 401/403 errors and refresh token
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('clubz_token');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = localStorage.getItem('clubz_refresh_token');
+      if (refreshToken) {
+        try {
+          const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+          const newAccessToken = res.data?.data?.accessToken || res.data?.data?.token;
+
+          if (newAccessToken) {
+            localStorage.setItem('clubz_token', newAccessToken);
+            api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+            processQueue(null, newAccessToken);
+            isRefreshing = false;
+            return api(originalRequest);
+          }
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          isRefreshing = false;
+          
+          localStorage.removeItem('clubz_token');
+          localStorage.removeItem('clubz_refresh_token');
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          return Promise.reject(refreshError);
+        }
+      } else {
+        isRefreshing = false;
+        localStorage.removeItem('clubz_token');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
