@@ -24,14 +24,22 @@ export interface WidgetDefinition {
   tags?: string[];
   status: WidgetStatus;
   defaultConfig: PageWidget['config'];
+  config?: any;
   authorId?: string;
+  author?: {
+    username: string;
+    name: string;
+    avatar?: string;
+  };
   createdAt: string;
   updatedAt: string;
   thumbnailUrl?: string;
+  previewUrl?: string;
   remoteUrl?: string;
   manifestUrl?: string;
   version: string;
   semanticVersion?: string;
+  envData?: string;
   isKilled?: boolean;
   isPublic?: boolean;
   reviewComments?: string[];

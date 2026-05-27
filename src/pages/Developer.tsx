@@ -3,31 +3,27 @@ import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
 import { useDeveloperStore } from '@/store/developerStore';
 import { useAuth } from '@/context/AuthContext';
 import { WidgetList } from '@/components/widgets/WidgetList';
-import { Key, Trash2, Plus, Copy, Check, Terminal, Package, Loader2 } from 'lucide-react';
+import { Loader2, Key, Trash2, Plus, Copy, Check, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 
+import { EditWidgetModal } from '@/components/widgets/EditWidgetModal';
+import { Documentation } from '@/components/developer/Documentation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BookOpen, Layers } from 'lucide-react';
 
 export default function Developer() {
-  const { apiKeys, generateKey, revokeKey } = useDeveloperStore();
   const { definitions, isLoading, fetchMyWidgets, removeDraft, submitForModeration } = useWidgetLibraryStore();
+  const { apiKeys, generateKey, revokeKey } = useDeveloperStore();
   const { user } = useAuth();
 
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedWidget, setSelectedWidget] = useState<any | null>(null);
+  
   const [newKeyName, setNewKeyName] = useState('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-
-  // Filter only widgets belonging to current user
-  const userWidgets = definitions.filter((w) => user && w.authorId === user.id);
-  const displayedWidgets =
-    filterStatus === 'all' ? userWidgets : userWidgets.filter((w) => w.status === filterStatus);
-
-  useEffect(() => {
-    fetchMyWidgets();
-  }, [fetchMyWidgets]);
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +38,15 @@ export default function Developer() {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  // Filter only widgets belonging to current user
+  const userWidgets = definitions.filter((w) => user && w.authorId === user.id);
+  const displayedWidgets =
+    filterStatus === 'all' ? userWidgets : userWidgets.filter((w) => w.status === filterStatus);
+
+  useEffect(() => {
+    fetchMyWidgets();
+  }, [fetchMyWidgets]);
+
   const FILTER_BUTTONS = [
     { value: 'all', label: 'Tous' },
     { value: 'draft', label: 'Brouillons' },
@@ -51,21 +56,21 @@ export default function Developer() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-8 py-12">
+    <div className="max-w-5xl mx-auto px-8 pt-4 pb-12">
       {/* Page Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Espace Développeur</h1>
           <p className="text-muted-foreground mt-2 text-lg">Gérez vos widgets et vos clés API CLI.</p>
         </div>
-        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/20">
-          <CardContent className="p-4 flex items-center gap-4">
+        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/20 self-center">
+          <CardContent className="px-4 py-2 flex items-center gap-3">
             <div>
-              <div className="text-xs font-semibold opacity-80 uppercase tracking-wider mb-1">Status du service</div>
-              <div className="flex items-center gap-2 font-bold text-lg">
-                <span className="relative flex h-3 w-3">
+              <div className="text-[10px] font-semibold opacity-80 uppercase tracking-wider">Status du service</div>
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
                 </span>
                 API Opérationnelle
               </div>
@@ -74,24 +79,29 @@ export default function Developer() {
         </Card>
       </div>
 
-      <Tabs defaultValue="widgets" className="space-y-8">
-        <TabsList>
-          <TabsTrigger value="widgets" className="gap-2">
-            <Package className="w-4 h-4" /> Mes Widgets
+
+
+      <Tabs defaultValue="widgets" className="w-full">
+        <TabsList className="mb-4 p-1 h-12 bg-muted/50 border border-border/50 rounded-xl">
+          <TabsTrigger value="widgets" className="rounded-lg h-9 px-6 font-semibold gap-2 data-[state=active]:shadow-sm data-[state=active]:bg-background">
+            <Layers className="w-4 h-4" /> Vos Créations
           </TabsTrigger>
-          <TabsTrigger value="api-keys" className="gap-2">
+          <TabsTrigger value="docs" className="rounded-lg h-9 px-6 font-semibold gap-2 data-[state=active]:shadow-sm data-[state=active]:bg-background">
+            <BookOpen className="w-4 h-4" /> Documentation
+          </TabsTrigger>
+          <TabsTrigger value="api-keys" className="rounded-lg h-9 px-6 font-semibold gap-2 data-[state=active]:shadow-sm data-[state=active]:bg-background">
             <Key className="w-4 h-4" /> Clés API
           </TabsTrigger>
         </TabsList>
 
-        {/* ── TAB: Mes Widgets ── */}
-        <TabsContent value="widgets" className="space-y-6">
+        <TabsContent value="widgets" className="space-y-6 mt-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-4">
-            <div>
-              <h2 className="text-xl font-bold tracking-tight">Vos Créations</h2>
-              <p className="text-muted-foreground">Widgets développés via la CLI Clubz.</p>
-            </div>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">Vos Créations</h2>
+            <p className="text-muted-foreground">Déployez et gérez vos widgets depuis l'interface web.</p>
+          </div>
 
+          <div className="flex items-center gap-4">
             <div className="flex bg-muted/50 p-1 rounded-lg border border-border flex-wrap gap-1">
               {FILTER_BUTTONS.map(({ value, label }) => (
                 <Button
@@ -106,24 +116,29 @@ export default function Developer() {
               ))}
             </div>
           </div>
+        </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20 gap-3 text-muted-foreground">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              Chargement de vos widgets...
-            </div>
-          ) : (
-            <WidgetList
-              widgets={displayedWidgets}
-              onDelete={(id) => removeDraft(id)}
-              onSubmit={(id) => submitForModeration(id)}
-              readOnly={false}
-            />
-          )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20 gap-3 text-muted-foreground">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            Chargement de vos widgets...
+          </div>
+        ) : (
+          <WidgetList
+            widgets={displayedWidgets}
+            onSelect={(widget) => setSelectedWidget(widget)}
+            onDelete={(id) => removeDraft(id)}
+            onSubmit={(id) => submitForModeration(id)}
+            readOnly={false}
+          />
+        )}
         </TabsContent>
-
+        <TabsContent value="docs" className="mt-0">
+          <Documentation />
+        </TabsContent>
+        
         {/* ── TAB: Clés API ── */}
-        <TabsContent value="api-keys">
+        <TabsContent value="api-keys" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left: API Keys List */}
             <div className="lg:col-span-2 space-y-8">
@@ -249,7 +264,13 @@ export default function Developer() {
             </div>
           </div>
         </TabsContent>
+        
       </Tabs>
+      <EditWidgetModal 
+        open={selectedWidget !== null} 
+        onClose={() => setSelectedWidget(null)} 
+        widget={selectedWidget} 
+      />
     </div>
   );
 }

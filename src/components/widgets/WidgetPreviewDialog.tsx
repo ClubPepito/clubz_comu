@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, Box, Layout, Tag } from 'lucide-react';
 import type { WidgetDefinition } from '@/types/widgetLibrary';
+import { WidgetRunner } from './WidgetRunner';
 
 interface Props {
   widget: WidgetDefinition | null;
@@ -32,14 +33,14 @@ export function WidgetPreviewDialog({ widget, open, onClose, onInstall }: Props)
           </DialogDescription>
         </DialogHeader>
 
-        {/* Preview iframe if remoteUrl is available */}
+        {/* Preview iframe via WidgetRunner */}
         {widget.remoteUrl ? (
           <div className="rounded-xl overflow-hidden border border-border bg-muted/30 h-64">
-            <iframe
-              src={widget.remoteUrl}
-              sandbox="allow-scripts allow-same-origin"
+            <WidgetRunner
+              widgetId={widget.id}
+              remoteUrl={widget.remoteUrl}
+              name={widget.name}
               className="w-full h-full"
-              title={`Aperçu — ${widget.name}`}
             />
           </div>
         ) : (

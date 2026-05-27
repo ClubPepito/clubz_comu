@@ -16,6 +16,8 @@ interface WidgetLibraryState {
 
   removeDraft: (id: string) => Promise<void>;
   submitForModeration: (id: string) => Promise<void>;
+  deployWidget: (file: Blob, manifest: string) => Promise<void>;
+  updateWidget: (id: string, data: any) => Promise<void>;
 }
 
 export const useWidgetLibraryStore = create<WidgetLibraryState>((set, get) => ({
@@ -92,6 +94,48 @@ export const useWidgetLibraryStore = create<WidgetLibraryState>((set, get) => ({
       toast.success('Widget soumis à modération.');
     } catch (err: any) {
       toast.error('Erreur lors de la soumission.');
+    }
+  },
+
+  deployWidget: async (file, manifest) => {
+    set({ isLoading: true });
+    try {
+      const res = await widgetLibraryService.deploy(file, manifest);
+      const newWidget = res.data;
+      set((state) => {
+        const merged = [...state.definitions];
+        const idx = merged.findIndex((e) => e.id === newWidget.widgetId);
+        if (idx >= 0) {
+          merged[idx] = { ...merged[idx], ...newWidget };
+        } else {
+          // If it's new, we should fetch again or add a partial widget
+          get().fetchMyWidgets(); 
+        }
+        return { definitions: merged, isLoading: false };
+      });
+      toast.success('Widget déployé avec succès !');
+    } catch (err: any) {
+      set({ isLoading: false });
+      toast.error(err.response?.data?.message || 'Erreur lors du déploiement.');
+      throw err; // throw to handle modal closing
+    }
+  },
+
+  updateWidget: async (id: string, data: any) => {
+    try {
+      const res = await widgetLibraryService.update(id, data);
+      set((state) => {
+        const merged = [...state.definitions];
+        const idx = merged.findIndex((e) => e.id === id);
+        if (idx >= 0) {
+          merged[idx] = { ...merged[idx], ...res.data };
+        }
+        return { definitions: merged };
+      });
+      toast.success('Widget mis à jour avec succès !');
+    } catch (err: any) {
+      toast.error('Erreur lors de la mise à jour.');
+      throw err;
     }
   },
 }));

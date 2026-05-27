@@ -32,6 +32,7 @@ import Login from './pages/Login';
 import Marketplace from './pages/Marketplace';
 import PageBuilderPage from './pages/PageBuilder';
 import Developer from './pages/Developer';
+import CliAuth from './pages/CliAuth';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CommunityProvider, useCommunity } from './context/CommunityContext';
 import { Button } from "@/components/ui/button";
@@ -67,8 +68,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
   const { communities, selectedCommunityId, setSelectedCommunityId, loading } = useCommunity();
 
-  // Don't show layout on login page
-  if (location.pathname === '/login') return <>{children}</>;
+  // Don't show layout on login page or cli-auth page
+  if (location.pathname === '/login' || location.pathname === '/cli-auth') return <>{children}</>;
 
   return (
     <div className="flex min-h-screen bg-background text-foreground font-sans">
@@ -78,7 +79,6 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-xl shadow-lg shadow-primary/30" />
           <div className="flex flex-col">
             <span className="text-lg font-bold leading-none tracking-tight">{APP_NAME}</span>
-            <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">Admin Panel</span>
           </div>
         </div>
 
@@ -167,6 +167,7 @@ function App() {
           <AppLayout>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/cli-auth" element={<CliAuth />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/create" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
               <Route path="/create/:id" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />

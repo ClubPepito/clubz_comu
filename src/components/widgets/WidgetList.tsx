@@ -1,8 +1,9 @@
 import type { WidgetDefinition } from '@/types/widgetLibrary';
-import { Trash2, Globe, Clock } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Trash2, Globe, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Props {
   widgets: WidgetDefinition[];
@@ -36,52 +37,49 @@ export function WidgetList({ widgets, onSelect, onDelete, onSubmit, readOnly = f
       {widgets.map((widget) => {
         const statusInfo = STATUS_LABELS[widget.status] ?? STATUS_LABELS.draft;
         return (
-          <Card
+          <div
             key={widget.id}
             onClick={() => onSelect?.(widget)}
-            className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden border-border bg-white dark:bg-slate-900 dark:border-slate-800"
+            className="group bg-card rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-[280px]"
           >
-            <div className={`h-1 w-full ${widget.isPublic ? 'bg-purple-500' : 'bg-blue-500'}`} />
-
-            <CardHeader className="p-5 pb-2">
-              <div className="flex justify-between items-start mb-2">
-                <Badge variant="outline" className={widget.type === 'Page' ? 'bg-teal-50 text-teal-700' : ''}>
-                  {widget.type === 'Page' ? 'PAGE' : widget.type}
-                </Badge>
+            {/* Preview Area */}
+            <div className="h-40 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center overflow-hidden">
+              <img 
+                src={widget.previewUrl || '/default-widget-preview.png'} 
+                alt={`Aperçu de ${widget.name}`} 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute top-3 right-3 flex gap-2">
                 <Badge className={`text-[10px] px-1.5 py-0 ${statusInfo.className}`}>
                   {statusInfo.label}
                 </Badge>
+                <Badge variant="secondary" className="bg-black/50 backdrop-blur-md text-white border-white/20 rounded-full px-3 py-1 font-semibold tracking-wide shadow-sm">
+                  WIDGET
+                </Badge>
               </div>
-              <h3 className="text-lg font-bold text-foreground dark:text-slate-100 mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                {widget.name}
-              </h3>
-            </CardHeader>
+            </div>
 
-            <CardContent className="p-5 pt-0">
-              <p className="text-sm text-muted-foreground dark:text-slate-400 line-clamp-2 h-10 font-medium leading-relaxed">
-                {widget.description ?? 'Pas de description'}
-              </p>
-              {widget.tags && widget.tags.length > 0 && (
-                <div className="flex gap-1 mt-2 overflow-hidden h-5">
-                  {widget.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 px-1.5 py-0.5 rounded-full"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
+            {/* Content Area */}
+            <div className="p-5 flex-1 flex flex-col">
+              <div className="flex justify-between items-start mb-1">
+                <h3 className="text-xl font-bold text-foreground line-clamp-1 flex-1" title={widget.name}>
+                  {widget.name}
+                </h3>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
+                <div className="flex items-center gap-2">
+                  <Avatar className="w-6 h-6">
+                    <AvatarImage src={widget.author?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${widget.author?.username || widget.authorId}`} />
+                    <AvatarFallback>{widget.author?.username?.charAt(0)?.toUpperCase() || 'D'}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-semibold text-muted-foreground truncate max-w-[100px]">
+                    {widget.author?.username || widget.author?.name || 'Développeur'}
+                  </span>
                 </div>
-              )}
-            </CardContent>
 
-            <CardFooter className="p-5 pt-0 mt-auto flex justify-between items-center border-t border-border/50">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                <Clock className="w-3.5 h-3.5" />
-                {new Date(widget.updatedAt).toLocaleDateString('fr-FR')}
-              </div>
-
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 {!readOnly && onSubmit && widget.status === 'draft' && (
                   <Button
                     variant="ghost"
@@ -93,6 +91,43 @@ export function WidgetList({ widgets, onSelect, onDelete, onSubmit, readOnly = f
                     <Globe className="w-4 h-4" />
                   </Button>
                 )}
+                
+                {/* Aperçu Dialog */}
+                <Dialog>
+                  <DialogTrigger className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-blue-50 text-blue-600 transition-colors" title="Aperçu du widget">
+                    <Eye className="w-4 h-4" />
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Aperçu Marketplace</DialogTitle>
+                    </DialogHeader>
+                    <div className="bg-muted/30 border border-border rounded-xl p-6 mt-4">
+                      <div className="bg-background rounded-lg border border-border p-5 shadow-sm overflow-hidden">
+                        <div className="w-full h-40 -mt-5 -mx-5 mb-4 border-b border-border bg-slate-100 overflow-hidden">
+                          <img 
+                            src={widget.previewUrl || '/default-widget-preview.png'} 
+                            alt={`Aperçu de ${widget.name}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h4 className="text-xl font-bold text-foreground">{widget.name || 'Widget Sans Nom'}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">Par vous</p>
+                          </div>
+                          <Badge variant="secondary" className="font-mono">{widget.version || '1.0.0'}</Badge>
+                        </div>
+                        <p className="text-sm text-foreground mb-6 line-clamp-3">
+                          {widget.description || 'Aucune description fournie pour ce widget.'}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="w-full" disabled>Installer (Démo)</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 {!readOnly && onDelete && (
                   <Button
                     variant="ghost"
@@ -107,9 +142,10 @@ export function WidgetList({ widgets, onSelect, onDelete, onSubmit, readOnly = f
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 )}
+                </div>
               </div>
-            </CardFooter>
-          </Card>
+            </div>
+          </div>
         );
       })}
     </div>
