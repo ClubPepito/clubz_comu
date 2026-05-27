@@ -199,13 +199,22 @@ export const widgetLibraryService = {
   /** Widgets validés publics — Marketplace */
   getMarketplace: () => api.get('/widget-library/marketplace'),
   /** Mes propres widgets (tous statuts) */
-  getMyWidgets: () => api.get('/widget-library/my-widgets'),
+  getMyWidgets: () => api.get('/widget-library/developer/my-widgets'),
   /** Créer un widget */
-  create: (data: any) => api.post('/widget-library', data),
+  create: (data: any) => api.post('/widget-library/developer/create', data),
   /** Mettre à jour un widget (ex: soumission en pending) */
-  update: (id: string, data: any) => api.patch(`/widget-library/${id}`, data),
+  update: (id: string, data: any) => api.patch(`/widget-library/developer/${id}`, data),
   /** Supprimer un widget */
-  delete: (id: string) => api.delete(`/widget-library/${id}`),
+  delete: (id: string) => api.delete(`/widget-library/developer/${id}`),
+  /** Déployer un widget depuis un dossier zip */
+  deploy: (file: Blob, manifest: string) => {
+    const formData = new FormData();
+    formData.append('file', file, 'widget.zip');
+    formData.append('manifest', manifest);
+    return api.post('/widget-library/developer/deploy', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // ============================================
@@ -241,5 +250,11 @@ export const pageService = {
     api.get(`/pages/community/${communityId}/published`),
 };
 
-export default api;
+// ============================================
+// System / Docs
+// ============================================
+export const systemService = {
+  getDeveloperApiDocs: () => api.get('/docs/developers-json'),
+};
 
+export default api;
