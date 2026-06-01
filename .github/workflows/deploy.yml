@@ -59,4 +59,4 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -d '{"ref":"main"}' \
-            "${{ secrets.COOLIFY_WEBHOOK_admin }}" || true
+            "${{ secrets.COOLIFY_WEBHOOK_admin }}"

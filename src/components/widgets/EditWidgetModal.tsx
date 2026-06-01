@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Eye, FileJson, Settings2, Save, Settings } from 'lucide-react';
+import { Loader2, Eye, FileJson, Settings, Info, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,7 +21,6 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
   const { updateWidget } = useWidgetLibraryStore();
   
   const [manifestData, setManifestData] = useState<any>({});
-  const [envData, setEnvData] = useState<string>('');
   const [configSchema, setConfigSchema] = useState<any[]>([]);
   const [previewValues, setPreviewValues] = useState<Record<string, any>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -33,7 +32,6 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
         version: widget.semanticVersion || '1.0.0',
         description: widget.description || '',
       });
-      setEnvData(widget.envData || '');
 
       // Parse settingsSchema from widget.config.
       if (Array.isArray(widget.config)) {
@@ -91,9 +89,6 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
         semanticVersion: manifestData.version,
         description: manifestData.description,
       };
-      if (envData.trim() !== '') {
-        payload.envData = envData.trim();
-      }
       
       await updateWidget(widget.id, payload);
       onClose();
@@ -108,22 +103,22 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[850px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[850px] h-[85vh] max-h-[85vh] flex flex-col p-0 overflow-hidden gap-0">
+        <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
           <DialogTitle>Paramétrage du Widget : {widget.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 space-y-6">
-          <Tabs defaultValue="preview" className="w-full">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          <Tabs defaultValue="info" className="w-full">
             <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-xl">
-              <TabsTrigger value="preview" className="gap-2 rounded-lg data-[state=active]:bg-background"><Eye className="w-4 h-4"/> Aperçu</TabsTrigger>
+              <TabsTrigger value="info" className="gap-2 rounded-lg data-[state=active]:bg-background"><Info className="w-4 h-4"/> Infos</TabsTrigger>
+              <TabsTrigger value="preview" className="gap-2 rounded-lg data-[state=active]:bg-background"><MonitorPlay className="w-4 h-4"/> Aperçu</TabsTrigger>
               <TabsTrigger value="manifest" className="gap-2 rounded-lg data-[state=active]:bg-background"><FileJson className="w-4 h-4"/> Manifeste</TabsTrigger>
               <TabsTrigger value="settings" className="gap-2 rounded-lg data-[state=active]:bg-background"><Settings className="w-4 h-4"/> Réglages</TabsTrigger>
-              <TabsTrigger value="env" className="gap-2 rounded-lg data-[state=active]:bg-background"><Settings2 className="w-4 h-4"/> Variables (.env)</TabsTrigger>
             </TabsList>
 
-            {/* TAB: Aperçu */}
-            <TabsContent value="preview" className="mt-4">
+            {/* TAB: Informations */}
+            <TabsContent value="info" className="mt-4">
               <div className="bg-muted/30 border border-border rounded-xl p-6">
                 <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Aperçu Marketplace</h3>
                 <div className="bg-background rounded-lg border border-border p-5 shadow-sm text-left">
@@ -141,6 +136,28 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                     <Button variant="outline" size="sm" className="w-full" disabled>Installer (Démo)</Button>
                   </div>
                 </div>
+              </div>
+            </TabsContent>
+
+            {/* TAB: Aperçu (Sandbox) */}
+            <TabsContent value="preview" className="mt-4">
+              <div className="bg-muted/30 border border-border rounded-xl p-4 overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+                {widget.remoteUrl ? (
+                  <iframe 
+                    src={widget.remoteUrl} 
+                    className="w-full h-[500px] border border-border/50 rounded-lg shadow-inner bg-white" 
+                    title="Widget Sandbox Preview"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  />
+                ) : (
+                  <div className="text-center space-y-3">
+                    <MonitorPlay className="w-12 h-12 text-muted-foreground/50 mx-auto" />
+                    <p className="text-muted-foreground text-sm max-w-sm">
+                      Aucun aperçu disponible. <br/>
+                      Vous devez déployer votre widget au moins une fois via la CLI pour générer un lien d'aperçu.
+                    </p>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -246,39 +263,25 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                 )}
               </div>
             </TabsContent>
-
-            {/* TAB: Environnement */}
-            <TabsContent value="env" className="mt-4 space-y-4 text-left">
-              <div>
-                <Label className="text-sm font-medium mb-1 block">Variables d'environnement (.env)</Label>
-                <Textarea 
-                  value={envData} 
-                  onChange={e => setEnvData(e.target.value)}
-                  placeholder="API_KEY=sk_test_12345&#10;NEXT_PUBLIC_API_URL=https://api.clubz.co"
-                  className="font-mono text-sm"
-                  rows={6}
-                />
-              </div>
-            </TabsContent>
           </Tabs>
+        </div>
 
-          <div className="pt-4 border-t border-border">
-            <Button 
-              className="w-full gap-2" 
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Sauvegarde...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" /> Sauvegarder les paramètres
-                </>
-              )}
-            </Button>
-          </div>
+        <div className="px-6 py-4 border-t border-border shrink-0 bg-muted/10">
+          <Button 
+            className="w-full gap-2" 
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Sauvegarde...
+              </>
+            ) : (
+              <>
+                Sauvegarder les paramètres
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

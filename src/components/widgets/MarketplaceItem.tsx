@@ -16,7 +16,7 @@ export function MarketplaceItem({ widget, onInstall }: Props) {
     <div
       className="group bg-card rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden h-[280px]"
     >
-      {/* Preview Area */}
+      {/* Zone d'aperçu de l'image */}
       <div className="h-40 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center overflow-hidden">
         <img 
           src={widget.previewUrl || '/default-widget-preview.png'} 
@@ -31,7 +31,7 @@ export function MarketplaceItem({ widget, onInstall }: Props) {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Informations du widget */}
       <div className="p-5 flex-1 flex flex-col">
         <h3 className="text-xl font-bold text-foreground line-clamp-1 mb-1" title={widget.name}>
           {widget.name}

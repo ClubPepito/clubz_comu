@@ -133,43 +133,94 @@ Il permet à Clubz de comprendre ce qu'est votre widget.
     id: "api",
     title: "Appels API & Environnements",
     content: `
-# Réseau et Environnements
+# Réseau et Sécurité
 
-### 1. Appeler des API externes depuis un Widget
+### 1. Appels vers des API externes
 
-Les widgets Clubz s'exécutent côté client, dans le navigateur de l'utilisateur (via une iframe sécurisée). 
-Vous pouvez faire des appels vers des API externes (ex: Météo, Stripe, etc.) en utilisant un \`fetch\` ou \`axios\` classique :
+Les widgets Clubz s'exécutent côté client, dans une iframe sécurisée au sein du navigateur de l'utilisateur. Vous pouvez effectuer des appels HTTP standards (\`fetch\`, \`axios\`) vers vos propres services ou des API publiques.
 
-\`\`\`tsx
-const response = await fetch("https://api.monservice.com/data");
-const data = await response.json();
+> ⚠️ **Attention aux secrets** : Ne placez **jamais** de clés d'API privées (Stripe Secret Key, OpenAI, etc.) dans le code source de votre widget ! Étant exécuté côté client, votre code est visible par n'importe qui. Pour utiliser des clés privées, créez votre propre backend sécurisé qui fera office de relais.
+
+### 2. Architecture Décentralisée (Identity Provider)
+
+Clubz adopte une architecture décentralisée de pointe (similaire à des plateformes comme Shopify ou Discord). Clubz n'héberge pas vos variables d'environnement. À la place, **Clubz agit comme un Fournisseur d'Identité (IdP)**.
+
+#### Le Jeton d'Identité (Identity JWT)
+Lorsque votre widget est chargé, Clubz lui injecte un **Identity JWT**. Ce jeton, signé cryptographiquement par l'infrastructure Clubz, atteste de l'identité de l'utilisateur actuel sans jamais exposer de données sensibles.
+
+**Comment l'utiliser ?**
+1. **Côté Widget (Frontend)** : Vous récupérez le jeton injecté et l'envoyez dans l'en-tête de vos requêtes vers votre propre backend :
+   \`\`\`typescript
+   // Le jeton est disponible globalement ou via le SDK
+   const token = window.CLUBZ_CONTEXT?.props?.identityToken;
+   
+   await fetch('https://votre-backend.com/api/action', {
+     headers: { 'Authorization': \`Bearer \${token}\` }
+   });
+   \`\`\`
+
+2. **Côté Backend (Votre serveur)** : Vous devez impérativement vérifier la validité de la signature de ce JWT pour vous assurer que la requête provient bien de Clubz.
+
+### 3. Vérification du JWT via JWKS
+
+Afin de simplifier et sécuriser la validation des signatures, Clubz expose ses clés publiques via le standard de l'industrie **JWKS (JSON Web Key Set)**. Cela permet à vos bibliothèques JWT de télécharger et mettre en cache automatiquement les clés, tout en gérant nativement la rotation des clés (Key Rotation).
+
+**URL JWKS :** \`https://api.clubz.co/.well-known/jwks.json\`
+
+**Caractéristiques du Jeton :**
+- **Algorithme (alg)** : \`RS256\`
+- **Issuer (iss)** : \`https://api.clubz.co\`
+- **Audience (aud)** : \`[ID_DE_VOTRE_WIDGET]\` (pour empêcher les attaques par rejeu d'un widget vers un autre)
+- **Expiration (exp)** : Courte (15 minutes) pour une sécurité optimale.
+- **Claims Personnalisés** : Le payload contient également \`userId\`, \`communityId\`, et \`role\` pour identifier formellement l'utilisateur.
+
+**Exemple de vérification backend en NodeJS (avec \`jsonwebtoken\` et \`jwks-rsa\`) :**
+\`\`\`javascript
+const jwt = require('jsonwebtoken');
+const jwksClient = require('jwks-rsa');
+
+const client = jwksClient({
+  jwksUri: 'https://api.clubz.co/.well-known/jwks.json'
+});
+
+function getKey(header, callback) {
+  client.getSigningKey(header.kid, function(err, key) {
+    const signingKey = key.publicKey || key.rsaPublicKey;
+    callback(null, signingKey);
+  });
+}
+
+// Vérification du token entrant
+jwt.verify(token, getKey, {
+  audience: 'VOTRE_WIDGET_ID',
+  issuer: 'https://api.clubz.co',
+  algorithms: ['RS256']
+}, function(err, decoded) {
+  if (err) return res.status(401).send('Token invalide ou expiré');
+  console.log("Utilisateur Clubz vérifié :", decoded.userId);
+});
 \`\`\`
 
-> ⚠️ **Sécurité (Clés Privées)** : Ne placez **jamais** de clés d'API privées (ex: Stripe Secret Key, OpenAI API Key) dans le code source de votre widget ! Puisqu'il s'exécute côté client, n'importe qui pourrait lire votre clé. Si vous devez utiliser une clé privée, vous devez soit créer votre propre petit serveur backend pour faire le relais, soit n'utiliser que des clés publiques conçues pour le frontend.
+### 4. Rafraîchissement du Jeton
 
-### 2. Comment le SDK gère-t-il les environnements (Local, Preprod, Prod) ?
+Étant donné que l'Identity JWT a une durée de vie très courte (15 minutes), il finira par expirer si l'utilisateur laisse la page de son application ouverte longtemps. Clubz a prévu un mécanisme pour gérer cela silencieusement.
 
-C'est la magie du \`@clubz/sdk\` : **il n'a pas besoin d'être configuré !** 
+Si votre backend vous renvoie une erreur \`401 Unauthorized\` parce que le jeton a expiré, votre code frontal peut en demander un neuf sans recharger toute la page, grâce au bridge de Clubz :
 
-Le SDK ne fait **aucune requête HTTP directe** vers l'API Clubz. À la place, il utilise un "Pont de communication" (Native Bridge) via \`postMessage\` pour parler directement à l'application hôte (Clubz Web ou Clubz Mobile) qui l'encadre.
+\`\`\`javascript
+try {
+  // Rafraîchit silencieusement le jeton auprès de l'application hôte
+  const freshToken = await window.Clubz.getIdentityToken();
+  // Relancez votre requête HTTP avec ce freshToken !
+} catch (error) {
+  console.error("Impossible de rafraîchir le jeton", error);
+}
+\`\`\`
 
-C'est l'application hôte (\`clubz_comu\`) qui sait si elle est en mode local (\`localhost:3000\`), en préproduction ou en production. Quand vous utilisez \`bridge.getUser()\`, le SDK demande simplement à l'application mère de lui fournir l'utilisateur. 
+### 5. API Server-to-Server (Clés API)
 
-### 3. Comment faire si mon propre backend a besoin de données Clubz ?
-
-Si votre widget possède son propre serveur backend (ex: pour stocker des scores, gérer des paiements sécurisés) et que ce serveur a besoin de données de Clubz, **il ne faut jamais faire confiance aux données envoyées par le frontend**.
-
-Voici l'architecture de sécurité standard à adopter :
-
-**A. La méthode d'authentification par Jeton (JWT)**
-1. Le frontend de votre widget demande un jeton temporaire via le SDK : \`const token = await bridge.getSessionToken();\` *(Cette fonctionnalité sera bientôt disponible dans le SDK)*
-2. Le frontend envoie ce \`token\` à **votre** backend.
-3. Votre backend vérifie la signature de ce \`token\` en appelant l'API Clubz (ou via une clé publique Clubz). S'il est valide, votre backend sait avec certitude quel utilisateur est connecté.
-
-**B. La méthode Server-to-Server (API Keys)**
-Si votre backend a besoin de récupérer des données communautaires de manière asynchrone (même quand l'utilisateur n'est pas sur le widget), vous devrez :
-1. Générer une **Clé d'API Serveur** depuis cet espace développeur.
-2. Utiliser cette clé sur votre backend pour interroger directement l'API REST de Clubz (\`https://api.clubz.co\`).
+Si votre backend a besoin d'interagir avec l'API Clubz de manière asynchrone ou détachée de l'utilisateur (ex: envoyer une notification push parce qu'un événement asynchrone est terminé), vous devez utiliser les **Clés d'API Serveur**.
+Générez-les depuis l'onglet "Clés API" de cet Espace Développeur et passez-les via l'en-tête HTTP \`Authorization: Bearer <VOTRE_CLE>\` lors de vos appels vers l'API REST Clubz.
 `
   },
   {
