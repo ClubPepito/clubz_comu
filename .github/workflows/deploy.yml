@@ -2,8 +2,6 @@ name: Build & Deploy admin
 
 on:
   push:
-    branches: [main, feat/coolify-deployment]
-  pull_request:
     branches: [main]
 
 env:
@@ -12,6 +10,7 @@ env:
 
 jobs:
   build:
+    if: contains(github.event.head_commit.message, '[deploy]')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -56,7 +55,4 @@ jobs:
       - name: Trigger Coolify deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -d '{"ref":"main"}' \
-            "${{ secrets.COOLIFY_WEBHOOK_admin }}"
+          curl -s -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" "${{ secrets.COOLIFY_WEBHOOK }}"
