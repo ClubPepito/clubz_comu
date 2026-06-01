@@ -10,27 +10,38 @@ RUN npm ci --legacy-peer-deps
 # Copie du code source
 COPY . .
 
-# Build (en ignorant les erreurs comme tu l'as demandé)
+# Build du projet Vite
 RUN npm run build 2>&1 || true
 
-# Stage 2: Production (Runner natif)
-FROM node:22-alpine AS runner
+# Stage 2: Production (Serveur Web Nginx)
+FROM nginx:alpine
 
-WORKDIR /app
+# Suppression de la configuration par défaut
+RUN rm /etc/nginx/conf.d/default.conf
 
-ENV NODE_ENV=production
-# Next.js écoutera sur ce port
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+# Copie des fichiers compilés de Vite (le fameux dossier dist)
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copie des assets statiques (images, polices...)
-COPY --from=builder /app/public ./public
+# Configuration Nginx optimisée pour une SPA (Vite/React/Vue)
+RUN cat > /etc/nginx/conf.d/default.conf <<'NGINX'
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
 
-# Copie du moteur Standalone de Next.js
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+    # Toutes les routes sont redirigées vers index.html (pour le router côté client)
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
 
-EXPOSE 3000
+    # Compression Gzip pour accélérer le chargement
+    gzip on;
+    gzip_types text/plain text/css text/javascript application/json application/javascript;
+    gzip_min_length 1000;
+}
+NGINX
 
-# Next.js démarre directement via Node, sans Nginx
-CMD ["node", "server.js"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
