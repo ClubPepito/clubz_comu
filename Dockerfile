@@ -1,64 +1,36 @@
 # Stage 1: Build
-FROM node:20-slim AS build
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copie des fichiers de dépendances
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
-# Copy source
+# Copie du code source
 COPY . .
 
-# Build (ignore TS errors for now)
+# Build (en ignorant les erreurs comme tu l'as demandé)
 RUN npm run build 2>&1 || true
 
-# Stage 2: Production
-FROM nginx:alpine
+# Stage 2: Production (Runner natif)
+FROM node:22-alpine AS runner
 
-# Remove default config
-RUN rm /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy built assets
-COPY --from=build /app/dist /usr/share/nginx/html
+ENV NODE_ENV=production
+# Next.js écoutera sur ce port
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Nginx config for SPA routing + metrics endpoint
-RUN cat > /etc/nginx/conf.d/default.conf <<'NGINX'
-server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
+# Copie des assets statiques (images, polices...)
+COPY --from=builder /app/public ./public
 
-    # SPA routing: all requests go to index.html
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
+# Copie du moteur Standalone de Next.js
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-    # Health check endpoint
-    location /health {
-        access_log off;
-        return 200 "OK\n";
-        add_header Content-Type text/plain;
-    }
+EXPOSE 3000
 
-    # Metrics placeholder (for future prometheus integration)
-    location /metrics {
-        access_log off;
-        return 200 "# TYPE clubz_admin_info gauge\nclubz_admin_info{version=\"1.0.0\"} 1\n";
-        add_header Content-Type text/plain;
-    }
-
-    # Gzip compression for assets
-    gzip on;
-    gzip_types text/plain text/css text/javascript application/json application/javascript;
-    gzip_min_length 1000;
-}
-NGINX
-
-EXPOSE 80
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
-
-CMD ["nginx", "-g", "daemon off;"]
+# Next.js démarre directement via Node, sans Nginx
+CMD ["node", "server.js"]
