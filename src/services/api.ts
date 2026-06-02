@@ -1,13 +1,6 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    if (host.includes('thomasgllt.fr')) {
-      const protocol = window.location.protocol;
-      return `${protocol}//api-clubz.thomasgllt.fr/api`;
-    }
-  }
   return (import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:3000/api';
 };
 

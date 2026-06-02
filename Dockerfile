@@ -11,6 +11,8 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 
 # Build du projet Vite
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build 2>&1 || true
 
 # Stage 2: Production (Serveur Web Nginx)
