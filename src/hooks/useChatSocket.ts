@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 const getSocketUrl = () => {
-  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+  const envVar = typeof window !== 'undefined' ? (window as any).ENV?.VITE_API_BASE_URL : null;
+  const apiBase = envVar || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
   return apiBase.replace(/\/api$/, '') + '/chats';
 };
 

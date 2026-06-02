@@ -46,4 +46,4 @@ NGINX
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD /bin/sh -c "echo \"window.ENV = { VITE_API_BASE_URL: '${VITE_API_BASE_URL}' };\" > /usr/share/nginx/html/env-config.js && nginx -g 'daemon off;'"
