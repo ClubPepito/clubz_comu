@@ -189,6 +189,43 @@ const CommunitySettings = () => {
                     <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description</Label>
                     <textarea value={community?.description} onChange={(e) => setCommunity({...community, description: e.target.value})} className="w-full min-h-[80px] rounded-lg border border-gray-100 bg-gray-50/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" />
                   </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Type d'accès</Label>
+                    <select
+                      value={community?.accessType || 'public'}
+                      onChange={(e) => setCommunity({...community, accessType: e.target.value})}
+                      className="flex h-9 w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 outline-none focus:border-primary/50 transition-colors"
+                    >
+                      <option value="public">Public</option>
+                      <option value="private">Privé</option>
+                      <option value="paid">Payant</option>
+                    </select>
+                  </div>
+                  {(community?.accessType === 'paid') && (
+                    <div className="grid grid-cols-2 gap-4 pt-1">
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Tarif (€)</Label>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          value={community?.price || ''} 
+                          onChange={(e) => setCommunity({...community, price: parseFloat(e.target.value) || 0})} 
+                          className="h-9 text-xs font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Facturation</Label>
+                        <select
+                          value={community?.paymentType || 'fixed'}
+                          onChange={(e) => setCommunity({...community, paymentType: e.target.value})}
+                          className="flex h-9 w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 outline-none focus:border-primary/50 transition-colors"
+                        >
+                          <option value="fixed">Prix fixe</option>
+                          <option value="subscription">Abonnement</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">

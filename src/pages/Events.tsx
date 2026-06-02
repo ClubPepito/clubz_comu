@@ -152,10 +152,8 @@ const Events = () => {
                 />
                 <div className="absolute top-3 right-3">
                   <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <Button size="icon" variant="secondary" className="h-7 w-7 rounded-lg bg-white/90 backdrop-blur-sm border-none shadow-sm transition-opacity">
-                        <MoreVertical size={14} />
-                      </Button>
+                    <DropdownMenuTrigger className="h-7 w-7 rounded-lg bg-white/90 backdrop-blur-sm border-none shadow-sm transition-opacity flex items-center justify-center outline-none cursor-pointer">
+                      <MoreVertical size={14} />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-lg border border-gray-100 shadow-xl p-1 min-w-[120px]">
                       <DropdownMenuItem className="text-[10px] font-bold gap-2 cursor-pointer">

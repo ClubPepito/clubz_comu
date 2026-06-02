@@ -53,23 +53,23 @@ const Members = () => {
     fetchMembers();
   }, [selectedCommunityId]);
 
-  const handleKickMember = async (memberId: string) => {
+  const handleKickMember = async (userId: string) => {
     if (!confirm('Voulez-vous vraiment exclure ce membre ?')) return;
     try {
       if (!selectedCommunityId) return;
-      await communityService.kickMember(selectedCommunityId, memberId);
-      setMembers(members.filter(m => m.id !== memberId));
+      await communityService.kickMember(selectedCommunityId, userId);
+      setMembers(members.filter(m => m.userId !== userId));
       toast.success('Membre exclu');
     } catch (err) {
       toast.error('Erreur lors de l\'exclusion');
     }
   };
 
-  const handleRoleChange = async (memberId: string, roleName: string) => {
+  const handleRoleChange = async (userId: string, roleName: string) => {
     try {
       if (!selectedCommunityId) return;
-      await communityService.updateMemberRole(selectedCommunityId, memberId, roleName);
-      setMembers(members.map(m => m.id === memberId ? { ...m, role: { ...m.role, name: roleName } } : m));
+      await communityService.updateMemberRole(selectedCommunityId, userId, roleName);
+      setMembers(members.map(m => m.userId === userId ? { ...m, role: { ...m.role, name: roleName } } : m));
       toast.success('Rôle mis à jour');
     } catch (err) {
       toast.error('Erreur lors du changement de rôle');
@@ -195,16 +195,14 @@ const Members = () => {
                     </TableCell>
                     <TableCell className="text-right px-5">
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-gray-100">
-                            <MoreVertical size={14} />
-                          </Button>
+                        <DropdownMenuTrigger className="h-7 w-7 rounded-lg hover:bg-gray-100 flex items-center justify-center outline-none cursor-pointer">
+                          <MoreVertical size={14} />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-lg border border-gray-100 shadow-xl p-1 min-w-[140px]">
-                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.id, 'admin')}>Admin</DropdownMenuItem>
-                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.id, 'moderator')}>Modérateur</DropdownMenuItem>
-                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.id, 'member')}>Membre</DropdownMenuItem>
-                          <DropdownMenuItem className="text-[10px] font-bold text-destructive hover:bg-destructive/5 cursor-pointer" onClick={() => handleKickMember(m.id)}>Exclure</DropdownMenuItem>
+                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.userId, 'admin')}>Admin</DropdownMenuItem>
+                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.userId, 'moderator')}>Modérateur</DropdownMenuItem>
+                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.userId, 'member')}>Membre</DropdownMenuItem>
+                          <DropdownMenuItem className="text-[10px] font-bold text-destructive hover:bg-destructive/5 cursor-pointer" onClick={() => handleKickMember(m.userId)}>Exclure</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
