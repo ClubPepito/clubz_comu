@@ -2,14 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 const getSocketUrl = () => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    if (host.includes('thomasgllt.fr')) {
-      const protocol = window.location.protocol;
-      return `${protocol}//api-clubz.thomasgllt.fr/chats`;
-    }
-  }
-  const apiBase = (import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:3000/api';
+  const envVar = typeof window !== 'undefined' ? (window as any).ENV?.VITE_API_BASE_URL : null;
+  const apiBase = envVar || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
   return apiBase.replace(/\/api$/, '') + '/chats';
 };
 

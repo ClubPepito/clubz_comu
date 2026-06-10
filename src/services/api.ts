@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
-  return (import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:3000/api';
+  const envVar = typeof window !== 'undefined' ? (window as any).ENV?.VITE_API_BASE_URL : null;
+  return envVar || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 };
 
 const API_URL = getApiUrl();
