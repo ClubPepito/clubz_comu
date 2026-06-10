@@ -7,6 +7,7 @@ import { docsSections } from './docsContent';
 import { DynamicApiDocs } from './DynamicApiDocs';
 import { ChevronRight, FileText, Code, Terminal, Book, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BRAND_NAME } from '@/constants/branding';
 
 const ICONS: Record<string, any> = {
   introduction: Book,
@@ -32,15 +33,15 @@ export function Documentation() {
           {docsSections.map((section) => {
             const Icon = ICONS[section.id] || FileText;
             const isActive = activeSection === section.id;
-            
+
             return (
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
                 className={cn(
                   "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                  isActive 
-                    ? "bg-primary/10 text-primary" 
+                  isActive
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
@@ -69,10 +70,10 @@ export function Documentation() {
             </ReactMarkdown>
           )}
         </article>
-        
+
         {/* Footer Navigation */}
         <div className="mt-16 pt-8 border-t border-border flex justify-between items-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Clubz Platform</p>
+          <p>© {new Date().getFullYear()} {BRAND_NAME} Platform</p>
           <a href="#" className="hover:text-foreground transition-colors">Besoin d'aide ?</a>
         </div>
       </main>

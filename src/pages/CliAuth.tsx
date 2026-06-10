@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout, Loader2, CheckCircle2, Terminal } from 'lucide-react';
+import { BRAND_NAME } from '@/constants/branding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +34,7 @@ export default function CliAuth() {
         }
 
         if (!callbackUrl) {
-            setError('Callback URL manquante. Relancez "clubz login".');
+            setError(`Callback URL manquante. Relancez "${BRAND_NAME.toLowerCase()} login".`);
             return;
         }
 
@@ -62,7 +63,7 @@ export default function CliAuth() {
             <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 text-white">
                 <Terminal className="w-12 h-12 text-red-400 mb-4" />
                 <h1 className="text-xl font-bold mb-2">Lien invalide</h1>
-                <p className="text-slate-400">Cette page doit être ouverte via <code className="bg-slate-800 px-2 py-1 rounded">clubz login</code></p>
+                <p className="text-slate-400">Cette page doit être ouverte via <code className="bg-slate-800 px-2 py-1 rounded">${BRAND_NAME.toLowerCase()} login</code></p>
             </div>
         );
     }
@@ -88,7 +89,7 @@ export default function CliAuth() {
                         <Layout className="w-6 h-6 text-white" />
                     </div>
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight text-white">Clubz CLI</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-white">{BRAND_NAME} CLI</h1>
                 <p className="text-slate-400 font-medium">Authentification pour la ligne de commande</p>
             </div>
 
@@ -96,7 +97,7 @@ export default function CliAuth() {
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl text-center text-white">Connexion</CardTitle>
                     <CardDescription className="text-center text-slate-400">
-                        Connectez-vous avec votre compte Clubz
+                        Connectez-vous avec votre compte {BRAND_NAME}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 
 import { EditWidgetModal } from '@/components/widgets/EditWidgetModal';
 import { Documentation } from '@/components/developer/Documentation';
+import { BRAND_NAME } from '@/constants/branding';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Layers } from 'lucide-react';
 
@@ -61,7 +62,7 @@ export default function Developer() {
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Espace Développeur</h1>
-          <p className="text-muted-foreground mt-2 text-lg">Gérez vos widgets et vos clés API CLI.</p>
+          <p className="text-muted-foreground mt-2 text-lg">Gérez vos widgets et vos clés API CLI pour {BRAND_NAME}.</p>
         </div>
         <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/20 self-center">
           <CardContent className="px-4 py-2 flex items-center gap-3">
@@ -229,19 +230,19 @@ export default function Developer() {
                       <p className="text-xs mt-1">Créez une clé ci-contre et copiez-la.</p>
                     </li>
                     <li>
-                      <strong className="text-foreground">Installez la CLI Clubz</strong>
-                      <p className="text-xs mt-1 font-mono bg-muted p-1 rounded">npm install -g @clubz/cli</p>
+                      <strong className="text-foreground">Installez la CLI {BRAND_NAME}</strong>
+                      <p className="text-xs mt-1 font-mono bg-muted p-1 rounded">npm install -g @{BRAND_NAME.toLowerCase()}/cli</p>
                     </li>
                     <li>
                       <strong className="text-foreground">Initialisez un projet</strong>
                       <p className="text-xs mt-1">
-                        <code className="bg-muted p-0.5 rounded">clubz init mon-widget</code>
+                        <code className="bg-muted p-0.5 rounded">{BRAND_NAME.toLowerCase()} init mon-widget</code>
                       </p>
                     </li>
                     <li>
                       <strong className="text-foreground">Développez &amp; Testez</strong>
                       <p className="text-xs mt-1">
-                        <code className="bg-muted p-0.5 rounded">cd mon-widget &amp;&amp; clubz dev</code>
+                        <code className="bg-muted p-0.5 rounded">cd mon-widget && {BRAND_NAME.toLowerCase()} dev</code>
                       </p>
                     </li>
                     <li>
@@ -249,7 +250,7 @@ export default function Developer() {
                       <p className="text-xs mt-1">
                         Ajoutez la clé dans le <code className="bg-muted p-0.5 rounded">.env</code> puis :
                         <br />
-                        <code className="bg-muted p-0.5 rounded">clubz deploy</code>
+                        <code className="bg-muted p-0.5 rounded">{BRAND_NAME.toLowerCase()} deploy</code>
                       </p>
                     </li>
                   </ol>

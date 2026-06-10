@@ -1,4 +1,5 @@
 import type { WidgetDefinition } from '@/types/widgetLibrary';
+import { BRAND_NAME } from '@/constants/branding';
 import { Trash2, Globe, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ export function WidgetList({ widgets, onSelect, onDelete, onSubmit, readOnly = f
       <div className="border-2 border-dashed border-border rounded-2xl py-16 text-center text-muted-foreground">
         <Globe className="w-10 h-10 mx-auto mb-3 opacity-30" />
         <p className="font-medium">Aucun widget trouvé.</p>
-        <p className="text-sm mt-1">Développez votre premier widget via la CLI Clubz.</p>
+        <p className="text-sm mt-1">Développez votre premier widget via la CLI ${BRAND_NAME}.</p>
       </div>
     );
   }

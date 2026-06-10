@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Lock, Mail, Loader2, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { APP_NAME } from '../constants/app';
+import { BRAND_DOMAIN } from '@/constants/branding';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -60,7 +61,7 @@ const Login = () => {
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="organisateur@clubz.app" 
+                    placeholder={`${BRAND_DOMAIN}`} 
                     className="pl-12 h-14 bg-muted/30 border-2 border-transparent focus-visible:border-primary/30 rounded-2xl text-base font-bold transition-all"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
