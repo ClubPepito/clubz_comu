@@ -72,7 +72,11 @@ const CommunitySettings = () => {
         communityService.getPendingRequests(selectedCommunityId),
         communityService.getWidgets(selectedCommunityId).catch(() => ({ data: [] }))
       ]);
-      setCommunity(commRes.data);
+      const comm = commRes.data;
+      if (comm) {
+        comm.allowedDomains = comm.emailDomains?.map((d: any) => d.domain) || [];
+      }
+      setCommunity(comm);
       if (commRes.data?.kycDocumentUrl) setKycUrl(commRes.data.kycDocumentUrl);
       if (commRes.data?.kycDescription) setKycDescription(commRes.data.kycDescription);
       setMembers(membersRes.data || []);
@@ -88,9 +92,27 @@ const CommunitySettings = () => {
   const handleUpdate = async () => {
     try {
       setSaving(true);
-      await communityService.update(selectedCommunityId!, community);
+      const payload = {
+        name: community.name,
+        description: community.description,
+        isPublic: community.accessType === 'public',
+        accessType: community.accessType,
+        price: community.accessType === 'paid' ? parseFloat(community.price) || 0 : null,
+        paymentType: community.accessType === 'paid' ? community.paymentType : null,
+        logo: community.logo,
+        primaryColor: community.primaryColor,
+        secondaryColor: community.secondaryColor,
+        category: community.category,
+        allowedDomains: community.accessType === 'private' ? community.allowedDomains : [],
+        tags: community.tags?.map((t: any) => typeof t === 'string' ? t : t.name) || [],
+      };
+      await communityService.update(selectedCommunityId!, payload);
       toast.success('Mis à jour !');
-    } catch (err) { toast.error('Erreur'); } finally { setSaving(false); }
+    } catch (err) { 
+      toast.error('Erreur lors de la mise à jour'); 
+    } finally { 
+      setSaving(false); 
+    }
   };
 
   const handleRequest = async (userId: string, action: 'accept' | 'reject') => {
@@ -201,6 +223,68 @@ const CommunitySettings = () => {
                       <option value="paid">Payant</option>
                     </select>
                   </div>
+                  {community?.accessType === 'private' && (
+                    <div className="space-y-2 pt-2 border border-dashed border-gray-100 rounded-xl p-3 bg-gray-50/20">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Restreindre par domaine email</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Ex: esgi.fr" 
+                          id="new-domain-input"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = (e.target as HTMLInputElement).value.trim().toLowerCase();
+                              if (val && !community.allowedDomains?.includes(val)) {
+                                const newDomains = [...(community.allowedDomains || []), val];
+                                setCommunity({ ...community, allowedDomains: newDomains });
+                                (e.target as HTMLInputElement).value = '';
+                              }
+                            }
+                          }}
+                          className="h-8 text-xs font-semibold"
+                        />
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm"
+                          className="h-8 text-[10px] uppercase font-bold px-3"
+                          onClick={() => {
+                            const input = document.getElementById('new-domain-input') as HTMLInputElement;
+                            const val = input?.value.trim().toLowerCase();
+                            if (val && !community.allowedDomains?.includes(val)) {
+                              const newDomains = [...(community.allowedDomains || []), val];
+                              setCommunity({ ...community, allowedDomains: newDomains });
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          Ajouter
+                        </Button>
+                      </div>
+                      <p className="text-[9px] text-muted-foreground mt-1">
+                        Les utilisateurs possédant une adresse email vérifiée sur ces domaines rejoindront la communauté automatiquement.
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {community.allowedDomains?.map((domain: string) => (
+                          <Badge 
+                            key={domain} 
+                            variant="secondary" 
+                            className="text-[10px] font-bold py-0.5 px-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md gap-1 flex items-center"
+                          >
+                            {domain}
+                            <XCircle 
+                              size={12} 
+                              className="text-gray-400 hover:text-red-500 cursor-pointer shrink-0" 
+                              onClick={() => {
+                                const newDomains = community.allowedDomains.filter((d: string) => d !== domain);
+                                setCommunity({ ...community, allowedDomains: newDomains });
+                              }}
+                            />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {(community?.accessType === 'paid') && (
                     <div className="grid grid-cols-2 gap-4 pt-1">
                       <div className="space-y-1.5">
