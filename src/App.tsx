@@ -10,7 +10,6 @@ import {
   Settings,
   ShieldAlert,
   Store,
-  Layers,
   Code2,
 } from 'lucide-react';
 import {

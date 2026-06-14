@@ -49,6 +49,24 @@ La CLI gère nativement plusieurs environnements de déploiement. Utilisez la co
 - **Local** : \`klyb login --local\`
 
 Une fois connecté, la commande \`klyb deploy\` publiera automatiquement votre widget sur le bon serveur !
+
+### Mettre à jour un projet existant
+L'écosystème Klyb évolue régulièrement. Pour profiter des dernières fonctionnalités dans vos widgets :
+
+1. **Mettre à jour la CLI** (Outil de déploiement) :
+   Si vous utilisez \`npx\`, rajoutez simplement \`@latest\` : \`npx @klyb/cli@latest deploy\`.
+   Si vous l'avez installée globalement :
+   \`\`\`bash
+   npm update -g @klyb/cli
+   \`\`\`
+
+2. **Mettre à jour le SDK** (Code de votre widget) :
+   Dans le dossier de votre projet, installez la dernière version du SDK :
+   \`\`\`bash
+   npm install @klyb/sdk@latest
+   \`\`\`
+
+> **Note de migration (Clubz ➡️ Klyb)** : Si votre projet a été généré à l'époque de "Clubz", renommez votre fichier \`clubz.json\` en \`klyb.json\`. Ensuite, dans votre code source, remplacez simplement vos imports \`@clubz/sdk\` par \`@klyb/sdk\`.
 `
   },
   {

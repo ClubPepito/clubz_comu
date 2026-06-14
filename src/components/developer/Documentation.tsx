@@ -39,17 +39,17 @@ export function Documentation() {
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                  "w-full flex items-start justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-left",
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className={cn("w-4 h-4", isActive ? "text-primary" : "opacity-60")} />
-                  {section.title}
+                <div className="flex items-start gap-3 flex-1">
+                  <Icon className={cn("w-4 h-4 mt-0.5 shrink-0", isActive ? "text-primary" : "opacity-60")} />
+                  <span className="leading-snug">{section.title}</span>
                 </div>
-                {isActive && <ChevronRight className="w-3 h-3 opacity-50" />}
+                {isActive && <ChevronRight className="w-3 h-3 mt-1 opacity-50 shrink-0" />}
               </button>
             );
           })}
