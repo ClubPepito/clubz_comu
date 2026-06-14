@@ -42,7 +42,13 @@ Cette commande va générer un dossier contenant :
 - Le SDK Klyb pré-installé.
 - Un manifeste \`klyb.json\` basique.
 
-Une fois développé, retournez sur l'onglet **Mes Créations** et importez le dossier.
+### Authentification & Environnements
+La CLI gère nativement plusieurs environnements de déploiement. Utilisez la commande de connexion pour choisir votre cible :
+- **Production** (par défaut) : \`klyb login\`
+- **Pré-production** : \`klyb login --staging\`
+- **Local** : \`klyb login --local\`
+
+Une fois connecté, la commande \`klyb deploy\` publiera automatiquement votre widget sur le bon serveur !
 `
   },
   {
@@ -165,11 +171,11 @@ Lorsque votre widget est chargé, Klyb lui injecte un **Identity JWT**. Ce jeton
 
 Afin de simplifier et sécuriser la validation des signatures, Klyb expose ses clés publiques via le standard de l'industrie **JWKS (JSON Web Key Set)**. Cela permet à vos bibliothèques JWT de télécharger et mettre en cache automatiquement les clés, tout en gérant nativement la rotation des clés (Key Rotation).
 
-**URL JWKS :** \`https://api.klyb.co/.well-known/jwks.json\`
+**URL JWKS :** \`https://api.klyb.app/.well-known/jwks.json\`
 
 **Caractéristiques du Jeton :**
 - **Algorithme (alg)** : \`RS256\`
-- **Issuer (iss)** : \`https://api.klyb.co\`
+- **Issuer (iss)** : \`https://api.klyb.app\`
 - **Audience (aud)** : \`[ID_DE_VOTRE_WIDGET]\` (pour empêcher les attaques par rejeu d'un widget vers un autre)
 - **Expiration (exp)** : Courte (15 minutes) pour une sécurité optimale.
 - **Claims Personnalisés** : Le payload contient également \`userId\`, \`communityId\`, et \`role\` pour identifier formellement l'utilisateur.
@@ -180,7 +186,7 @@ const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
 const client = jwksClient({
-  jwksUri: 'https://api.klyb.co/.well-known/jwks.json'
+  jwksUri: 'https://api.klyb.app/.well-known/jwks.json'
 });
 
 function getKey(header, callback) {
@@ -193,7 +199,7 @@ function getKey(header, callback) {
 // Vérification du token entrant
 jwt.verify(token, getKey, {
   audience: 'VOTRE_WIDGET_ID',
-  issuer: 'https://api.klyb.co',
+  issuer: 'https://api.klyb.app',
   algorithms: ['RS256']
 }, function(err, decoded) {
   if (err) return res.status(401).send('Token invalide ou expiré');
