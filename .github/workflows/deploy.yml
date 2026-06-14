@@ -2,7 +2,7 @@ name: Build & Deploy admin
 
 on:
   push:
-    branches: [main]
+    branches: [main, ppd]
 
 env:
   REGISTRY: ghcr.io
@@ -54,7 +54,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trigger Coolify deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      # Appel de Coolify PPD
+      - name: Trigger Coolify deployment (PPD)
+        if: contains(github.event.head_commit.message, 'deploy ppd') || (github.ref == 'refs/heads/ppd' && !contains(github.event.head_commit.message, 'deploy prod'))
+        run: |
+          curl -s -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" "${{ secrets.COOLIFY_WEBHOOK_PPD }}"
+
+      # Appel de Coolify PROD
+      - name: Trigger Coolify deployment (PROD)
+        if: contains(github.event.head_commit.message, 'deploy prod') || (github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'deploy ppd'))
         run: |
           curl -s -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" "${{ secrets.COOLIFY_WEBHOOK }}"
