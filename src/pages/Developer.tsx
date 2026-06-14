@@ -94,7 +94,7 @@ export default function Developer() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-8 pt-4 pb-12">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
       {/* Page Header */}
       <div className="flex justify-between items-start mb-8">
         <div>

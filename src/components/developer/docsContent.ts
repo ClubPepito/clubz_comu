@@ -57,7 +57,7 @@ Une fois connecté, la commande \`klyb deploy\` publiera automatiquement votre w
     content: `
 # Le SDK React (\`@klyb/sdk\`)
 
-Le SDK vous permet de communiquer avec l'application hôte (Klyb) depuis l'Iframe de votre widget.
+Le SDK vous permet de communiquer avec l'application hôte (Klyb) depuis l'Iframe de votre widget. Il expose des hooks React ainsi qu'un objet \`bridge\` pour exécuter des actions natives sur le téléphone.
 
 ## Installation
 
@@ -102,6 +102,29 @@ export function UserProfile() {
   return <p>Bonjour {user.name} !</p>;
 }
 \`\`\`
+
+## Actions Natives (Le Bridge)
+
+### \`bridge.resize(height)\`
+L'application mobile de Klyb enferme votre widget dans une zone délimitée. Si le contenu de votre widget dépasse, il sera coupé. Appelez \`bridge.resize()\` pour forcer l'application mobile à adapter sa hauteur à votre contenu !
+
+\`\`\`tsx
+import { bridge } from '@klyb/sdk';
+import { useEffect, useRef } from 'react';
+
+export function AutoResizingWidget() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Dès le chargement, on indique à l'app mobile notre taille réelle
+    if (containerRef.current) {
+       bridge.resize(containerRef.current.scrollHeight);
+    }
+  }, []);
+
+  return <div ref={containerRef}>Contenu adaptatif de mon widget...</div>;
+}
+\`\`\`
 `
   },
   {
@@ -125,12 +148,15 @@ Il permet à Klyb de comprendre ce qu'est votre widget.
 }
 \`\`\`
 
-### Propriétés :
-- **\`name\`** : Le nom affiché sur la marketplace.
-- **\`version\`** : Doit suivre le format SemVer.
-- **\`description\`** : Décrivez l'utilité de votre widget.
-- **\`type\`** : \`Widget\` (module encastrable) ou \`Page\` (pleine page).
-- **\`entry\`** : Le point d'entrée de votre build. Par défaut \`/index.html\` pour une SPA Vite.
+### Propriétés du Manifeste :
+
+| Champ | Type | Description |
+|-----------|------|-------------|
+| **\`name\`** | \`string\` | Le nom affiché publiquement sur la marketplace Klyb. |
+| **\`version\`** | \`string\` | Doit suivre le format standard *SemVer* (ex: \`1.0.2\`). |
+| **\`description\`** | \`string\` | Décrivez l'utilité de votre widget en quelques mots. |
+| **\`type\`** | \`enum\` | \`Widget\` (module encastrable) ou \`Page\` (pleine page). |
+| **\`entry\`** | \`string\` | Le point d'entrée de votre build. Par défaut \`/index.html\` pour Vite. |
 
 > **Astuce :** Vous pouvez éditer ces informations en direct depuis la modale de déploiement web avant de valider votre publication !
 `

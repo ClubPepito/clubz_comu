@@ -63,7 +63,7 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
       {/* Header + Search */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
