@@ -104,9 +104,9 @@ export const useWidgetLibraryStore = create<WidgetLibraryState>((set, get) => ({
       const newWidget = res.data;
       set((state) => {
         const merged = [...state.definitions];
-        const idx = merged.findIndex((e) => e.id === newWidget.widgetId);
+        const idx = merged.findIndex((e) => e.id === newWidget.widgetId || e.id === newWidget.id);
         if (idx >= 0) {
-          merged[idx] = { ...merged[idx], ...newWidget };
+          merged[idx] = { ...merged[idx], ...newWidget, status: 'pending' };
         } else {
           // If it's new, we should fetch again or add a partial widget
           get().fetchMyWidgets(); 

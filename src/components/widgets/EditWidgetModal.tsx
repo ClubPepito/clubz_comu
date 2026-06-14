@@ -10,9 +10,7 @@ import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
 import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { widgetLibraryService } from '@/services/api';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
 
 interface Props {
   open: boolean;
@@ -37,7 +35,6 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
       setManifestData({
         name: widget.name,
         version: widget.semanticVersion || '1.0.0',
-        description: widget.description || '',
         description: widget.description || '',
       });
 
@@ -199,7 +196,7 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs">Dernière mise à jour</span>
-                    <span>{new Date(widget.updatedAt).toLocaleDateString()}</span>
+                    <span>{new Date(widget.updatedAt).toLocaleDateString()} à {new Date(widget.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   {widget.tags && widget.tags.length > 0 && (
                     <div className="col-span-2">
@@ -433,14 +430,54 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                     </div>
                   </div>
 
+                  {/* Affichage des commentaires de l'historique ou reviewComments */}
                   {widget.status === 'rejected' && widget.reviewComments && widget.reviewComments.length > 0 && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <h4 className="text-sm font-bold text-red-800 mb-2">Commentaires de modération</h4>
+                      <h4 className="text-sm font-bold text-red-800 mb-2">Dernier retour de modération</h4>
                       <ul className="list-disc list-inside space-y-1">
                         {widget.reviewComments.map((comment, idx) => (
                           <li key={idx} className="text-xs text-red-700">{comment}</li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {widget.history && widget.history.length > 0 && (
+                    <div className="bg-background rounded-lg border border-border p-4 shadow-sm">
+                      <h4 className="text-sm font-bold text-foreground mb-4">Historique des déploiements et validations</h4>
+                      <div className="space-y-4">
+                        {widget.history.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((entry) => (
+                          <div key={entry.id} className="text-sm border-l-2 border-muted pl-3 pb-2 last:pb-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge 
+                                variant={
+                                  entry.status === 'validated' ? 'default' : 
+                                  entry.status === 'rejected' ? 'destructive' : 
+                                  entry.status === 'pending' ? 'secondary' : 'outline'
+                                } 
+                                className="px-1.5 py-0 text-[10px]"
+                              >
+                                {entry.status}
+                              </Badge>
+                              <span className="text-muted-foreground text-xs font-medium">v{entry.version}</span>
+                              <span className="text-muted-foreground text-xs ml-auto">
+                                {new Date(entry.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {entry.reviewComment && (
+                              <p className="mt-2 text-xs bg-muted/50 p-2 rounded text-foreground italic">
+                                "{entry.reviewComment}"
+                              </p>
+                            )}
+                            {(entry.remoteUrl || entry.manifestUrl) && (
+                              <div className="mt-2 text-xs text-muted-foreground truncate">
+                                {entry.remoteUrl && <div><span className="font-semibold">URL :</span> {entry.remoteUrl}</div>}
+                                {entry.manifestUrl && <div><span className="font-semibold">Manifest :</span> {entry.manifestUrl}</div>}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 

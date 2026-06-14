@@ -287,7 +287,7 @@ export const widgetLibraryService = {
     });
   },
   /** Modérer un widget (validation/rejet) */
-  review: (id: string, data: { status: 'validated' | 'rejected'; reviewComments?: string }) => 
+  review: (id: string, data: { status: 'validated' | 'rejected'; reviewComment?: string; remoteUrl?: string; manifestUrl?: string }) => 
     api.post(`/widget-library/${id}/review`, data),
 };
 

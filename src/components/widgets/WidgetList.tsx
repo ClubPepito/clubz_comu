@@ -1,9 +1,8 @@
 import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { BRAND_NAME } from '@/constants/branding';
-import { Trash2, Globe, Eye } from 'lucide-react';
+import { Trash2, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Props {
@@ -22,7 +21,7 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   blocked: { label: 'Bloqué', className: 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400' },
 };
 
-export function WidgetList({ widgets, onSelect, onDelete, onSubmit, readOnly = false }: Props) {
+export function WidgetList({ widgets, onSelect, onDelete, readOnly = false }: Props) {
   if (widgets.length === 0) {
     return (
       <div className="border-2 border-dashed border-border rounded-2xl py-16 text-center text-muted-foreground">
@@ -81,53 +80,6 @@ export function WidgetList({ widgets, onSelect, onDelete, onSubmit, readOnly = f
                 </div>
 
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                {!readOnly && onSubmit && widget.status === 'draft' && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title="Soumettre pour validation"
-                    className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                    onClick={(e) => { e.stopPropagation(); onSubmit(widget.id); }}
-                  >
-                    <Globe className="w-4 h-4" />
-                  </Button>
-                )}
-                
-                {/* Aperçu Dialog */}
-                <Dialog>
-                  <DialogTrigger className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-blue-50 text-blue-600 transition-colors" title="Aperçu du widget">
-                    <Eye className="w-4 h-4" />
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Aperçu Marketplace</DialogTitle>
-                    </DialogHeader>
-                    <div className="bg-muted/30 border border-border rounded-xl p-6 mt-4">
-                      <div className="bg-background rounded-lg border border-border p-5 shadow-sm overflow-hidden">
-                        <div className="w-full h-40 -mt-5 -mx-5 mb-4 border-b border-border bg-slate-100 overflow-hidden">
-                          <img 
-                            src={widget.previewUrl || '/default-widget-preview.png'} 
-                            alt={`Aperçu de ${widget.name}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h4 className="text-xl font-bold text-foreground">{widget.name || 'Widget Sans Nom'}</h4>
-                            <p className="text-sm text-muted-foreground mt-1">Par vous</p>
-                          </div>
-                          <Badge variant="secondary" className="font-mono">{widget.version || '1.0.0'}</Badge>
-                        </div>
-                        <p className="text-sm text-foreground mb-6 line-clamp-3">
-                          {widget.description || 'Aucune description fournie pour ce widget.'}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="w-full" disabled>Installer (Démo)</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
 
                 {!readOnly && onDelete && (
                   <Button

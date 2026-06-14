@@ -6,7 +6,7 @@ import { Loader2, Key, Trash2, Plus, Copy, Check, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+
 
 import { EditWidgetModal } from '@/components/widgets/EditWidgetModal';
 import { Documentation } from '@/components/developer/Documentation';
