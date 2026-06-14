@@ -32,25 +32,30 @@ import { useCommunity } from '../context/CommunityContext';
 const Members = () => {
   const { selectedCommunityId } = useCommunity();
   const [members, setMembers] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchData = async () => {
       if (!selectedCommunityId) return;
       try {
         setLoading(true);
-        const res = await communityService.getMembers(selectedCommunityId);
-        setMembers(res.data || []);
+        const [membersRes, rolesRes] = await Promise.all([
+          communityService.getMembers(selectedCommunityId),
+          communityService.getRoles(selectedCommunityId),
+        ]);
+        setMembers(membersRes.data || []);
+        setRoles(rolesRes.data || []);
       } catch (err) {
-        console.error('Failed to fetch members', err);
-        toast.error('Erreur lors du chargement des membres');
+        console.error('Failed to fetch members or roles', err);
+        toast.error('Erreur lors du chargement des données');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMembers();
+    fetchData();
   }, [selectedCommunityId]);
 
   const handleKickMember = async (userId: string) => {
@@ -65,11 +70,12 @@ const Members = () => {
     }
   };
 
-  const handleRoleChange = async (userId: string, roleName: string) => {
+  const handleRoleChange = async (userId: string, roleId: string) => {
     try {
       if (!selectedCommunityId) return;
-      await communityService.updateMemberRole(selectedCommunityId, userId, roleName);
-      setMembers(members.map(m => m.userId === userId ? { ...m, role: { ...m.role, name: roleName } } : m));
+      await communityService.updateMemberRole(selectedCommunityId, userId, roleId);
+      const matchingRole = roles.find(r => r.id === roleId);
+      setMembers(members.map(m => m.userId === userId ? { ...m, role: matchingRole } : m));
       toast.success('Rôle mis à jour');
     } catch (err) {
       toast.error('Erreur lors du changement de rôle');
@@ -199,9 +205,17 @@ const Members = () => {
                           <MoreVertical size={14} />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-lg border border-gray-100 shadow-xl p-1 min-w-[140px]">
-                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.userId, 'admin')}>Admin</DropdownMenuItem>
-                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.userId, 'moderator')}>Modérateur</DropdownMenuItem>
-                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.userId, 'member')}>Membre</DropdownMenuItem>
+                          {roles
+                            .filter((r) => r.name !== 'Créateur')
+                            .map((role) => (
+                              <DropdownMenuItem
+                                key={role.id}
+                                className="text-[10px] font-bold cursor-pointer"
+                                onClick={() => handleRoleChange(m.userId, role.id)}
+                              >
+                                {role.name}
+                              </DropdownMenuItem>
+                            ))}
                           <DropdownMenuItem className="text-[10px] font-bold text-destructive hover:bg-destructive/5 cursor-pointer" onClick={() => handleKickMember(m.userId)}>Exclure</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
