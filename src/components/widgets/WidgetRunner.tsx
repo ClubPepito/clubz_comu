@@ -25,7 +25,7 @@ export function WidgetRunner({ widgetId, remoteUrl, name, className }: WidgetRun
         const message = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
 
         // On ignore les messages qui ne viennent pas du SDK
-        if (message.source !== 'clubz-widget' || !message.id || !message.action) {
+        if (message.source !== 'klyb-widget' || !message.id || !message.action) {
           return;
         }
 

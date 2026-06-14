@@ -20,7 +20,7 @@ function metricsEndpointPlugin(serviceName: string): Plugin {
   };
 
   return {
-    name: 'clubz-admin-metrics-endpoint',
+    name: 'klyb-admin-metrics-endpoint',
     configureServer(server) {
       server.middlewares.use(handler);
     },
@@ -35,7 +35,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    metricsEndpointPlugin('clubz-admin-commu'),
+    metricsEndpointPlugin('klyb-admin-commu'),
   ],
   server: {
     host: '0.0.0.0',

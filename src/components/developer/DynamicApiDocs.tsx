@@ -45,7 +45,7 @@ export function DynamicApiDocs() {
           md += `---\n\n`;
         }
         
-        md += `> 💡 **En coulisse :** Le backend Clubz sécurise ces routes grâce à la balise \`@DeveloperRoute()\`. Cette balise garantit qu'une Clé API ne peut être utilisée **que** sur ces endpoints spécifiques.\n`;
+        md += `> 💡 **En coulisse :** Le backend Klyb sécurise ces routes grâce à la balise \`@DeveloperRoute()\`. Cette balise garantit qu'une Clé API ne peut être utilisée **que** sur ces endpoints spécifiques.\n`;
 
         setMarkdown(md);
       } catch (err) {

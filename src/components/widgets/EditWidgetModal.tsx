@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Eye, FileJson, Settings, Info, MonitorPlay } from 'lucide-react';
+import { Loader2, Eye, FileJson, Settings, Info, MonitorPlay, Lock, Trash2, Plus, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,9 @@ import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
 import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { widgetLibraryService } from '@/services/api';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface Props {
   open: boolean;
@@ -18,12 +21,16 @@ interface Props {
 }
 
 export function EditWidgetModal({ open, onClose, widget }: Props) {
-  const { updateWidget } = useWidgetLibraryStore();
+  const { updateWidget, fetchMyWidgets } = useWidgetLibraryStore();
   
   const [manifestData, setManifestData] = useState<any>({});
   const [configSchema, setConfigSchema] = useState<any[]>([]);
   const [previewValues, setPreviewValues] = useState<Record<string, any>>({});
+  const [envVars, setEnvVars] = useState<{key: string, value: string}[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Validation state
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (widget && open) {
@@ -31,7 +38,23 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
         name: widget.name,
         version: widget.semanticVersion || '1.0.0',
         description: widget.description || '',
+        description: widget.description || '',
       });
+
+      let initialEnv: {key: string, value: string}[] = [];
+      if (widget.envData) {
+        try {
+          const parsed = JSON.parse(widget.envData);
+          if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+            initialEnv = Object.entries(parsed).map(([k, v]) => ({ key: k, value: String(v) }));
+          } else if (Array.isArray(parsed)) {
+             initialEnv = parsed;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      setEnvVars(initialEnv);
 
       // Parse settingsSchema from widget.config.
       if (Array.isArray(widget.config)) {
@@ -84,10 +107,16 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
     if (!widget) return;
     setIsSaving(true);
     try {
+      const envDataStr = JSON.stringify(envVars.reduce((acc, curr) => {
+        if (curr.key.trim()) acc[curr.key.trim()] = curr.value;
+        return acc;
+      }, {} as Record<string, string>));
+
       const payload: any = {
         name: manifestData.name,
         semanticVersion: manifestData.version,
         description: manifestData.description,
+        envData: envDataStr,
       };
       
       await updateWidget(widget.id, payload);
@@ -96,6 +125,20 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
       console.error(err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleValidationRequest = async (status: 'pending' | 'draft') => {
+    if (!widget) return;
+    setIsSubmitting(true);
+    try {
+      await updateWidget(widget.id, { status });
+      toast.success(status === 'pending' ? 'Widget soumis pour validation' : 'Soumission annulée');
+      fetchMyWidgets();
+    } catch (err: any) {
+      toast.error('Erreur lors de la mise à jour du statut');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -110,31 +153,64 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-xl">
+            <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 rounded-xl overflow-x-auto">
               <TabsTrigger value="info" className="gap-2 rounded-lg data-[state=active]:bg-background"><Info className="w-4 h-4"/> Infos</TabsTrigger>
+              <TabsTrigger value="validation" className="gap-2 rounded-lg data-[state=active]:bg-background"><ShieldCheck className="w-4 h-4"/> Validation</TabsTrigger>
               <TabsTrigger value="preview" className="gap-2 rounded-lg data-[state=active]:bg-background"><MonitorPlay className="w-4 h-4"/> Aperçu</TabsTrigger>
               <TabsTrigger value="manifest" className="gap-2 rounded-lg data-[state=active]:bg-background"><FileJson className="w-4 h-4"/> Manifeste</TabsTrigger>
               <TabsTrigger value="settings" className="gap-2 rounded-lg data-[state=active]:bg-background"><Settings className="w-4 h-4"/> Réglages</TabsTrigger>
+              <TabsTrigger value="env" className="gap-2 rounded-lg data-[state=active]:bg-background"><Lock className="w-4 h-4"/> Env</TabsTrigger>
             </TabsList>
 
             {/* TAB: Informations */}
-            <TabsContent value="info" className="mt-4">
+            <TabsContent value="info" className="mt-4 space-y-4">
               <div className="bg-muted/30 border border-border rounded-xl p-6">
                 <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Aperçu Marketplace</h3>
                 <div className="bg-background rounded-lg border border-border p-5 shadow-sm text-left">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h4 className="text-xl font-bold text-foreground">{manifestData.name || 'Widget Sans Nom'}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">Par vous</p>
+                      <p className="text-sm text-muted-foreground mt-1">Par {widget.author?.name || 'vous'}</p>
                     </div>
                     <Badge variant="secondary" className="font-mono">{manifestData.version || '1.0.0'}</Badge>
                   </div>
-                  <p className="text-sm text-foreground mb-6 line-clamp-3">
+                  <p className="text-sm text-foreground line-clamp-3">
                     {manifestData.description || 'Aucune description fournie pour ce widget.'}
                   </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="w-full" disabled>Installer (Démo)</Button>
+                </div>
+              </div>
+
+              <div className="bg-muted/30 border border-border rounded-xl p-6 text-left">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Détails Techniques</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground block text-xs">ID du Widget</span>
+                    <span className="font-mono text-xs">{widget.id}</span>
                   </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Statut</span>
+                    <Badge variant={widget.status === 'validated' ? 'default' : 'secondary'} className="mt-1 capitalize">
+                      {widget.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Créé le</span>
+                    <span>{new Date(widget.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Dernière mise à jour</span>
+                    <span>{new Date(widget.updatedAt).toLocaleDateString()}</span>
+                  </div>
+                  {widget.tags && widget.tags.length > 0 && (
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground block text-xs mb-1">Tags</span>
+                      <div className="flex gap-1 flex-wrap">
+                        {widget.tags.map((tag, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">{tag}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -202,7 +278,7 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                 <div className="bg-background rounded-lg border border-border p-4 space-y-4 shadow-sm text-left max-h-[50vh] overflow-y-auto">
                   {configSchema.length === 0 ? (
                     <div className="text-center py-6 text-xs text-muted-foreground italic">
-                      Aucun paramètre défini dans le fichier clubz.json (settingsSchema).
+                      Aucun paramètre défini dans le fichier klyb.json (settingsSchema).
                     </div>
                   ) : (
                     configSchema.map((field, idx) => {
@@ -250,17 +326,155 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                     })
                   )}
                 </div>
+              </div>
+            </TabsContent>
+
+            {/* TAB: Env */}
+            <TabsContent value="env" className="mt-4 space-y-4">
+              <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4 text-left">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <Lock className="w-4 h-4 text-emerald-500" /> Variables d'environnement
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    Définissez ici des secrets ou variables nécessaires au bon fonctionnement de votre widget côté serveur (clés d'API, tokens, etc.).
+                    Elles seront cryptées en base de données.
+                  </p>
+                </div>
                 
-                {configSchema.length > 0 && (
-                  <div className="pt-2">
-                    <h4 className="text-[10px] font-bold text-muted-foreground mb-1 flex items-center gap-1">
-                      <FileJson className="w-3 h-3 text-indigo-500" /> Schéma de configuration (défini dans clubz.json)
-                    </h4>
-                    <pre className="bg-slate-950 text-slate-100 p-2 rounded-lg text-[9px] font-mono overflow-x-auto border border-slate-800 text-left max-h-24">
-                      {JSON.stringify(configSchema, null, 2)}
-                    </pre>
+                <div className="space-y-3 mt-4">
+                  {envVars.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-muted-foreground italic bg-background rounded-lg border border-border">
+                      Aucune variable définie.
+                    </div>
+                  ) : (
+                    envVars.map((env, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Input
+                          placeholder="CLÉ (ex: API_KEY)"
+                          value={env.key}
+                          onChange={(e) => {
+                            const newVars = [...envVars];
+                            newVars[idx].key = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                            setEnvVars(newVars);
+                          }}
+                          className="font-mono text-xs h-9 w-1/3"
+                        />
+                        <Input
+                          type="password"
+                          placeholder="Valeur cryptée..."
+                          value={env.value}
+                          onChange={(e) => {
+                            const newVars = [...envVars];
+                            newVars[idx].value = e.target.value;
+                            setEnvVars(newVars);
+                          }}
+                          className="font-mono text-xs h-9 flex-1"
+                        />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0"
+                          onClick={() => {
+                            const newVars = [...envVars];
+                            newVars.splice(idx, 1);
+                            setEnvVars(newVars);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full gap-2 text-xs h-9 border-dashed border-2"
+                    onClick={() => setEnvVars([...envVars, { key: '', value: '' }])}
+                  >
+                    <Plus className="w-3 h-3" /> Ajouter une variable
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* TAB: Validation */}
+            {/* TAB: Validation */}
+            <TabsContent value="validation" className="mt-4 space-y-4">
+              <div className="bg-muted/30 border border-border rounded-xl p-6 text-left">
+                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-indigo-500" /> Validation Marketplace
+                </h3>
+                
+                <div className="space-y-6">
+                  <div className="bg-background rounded-lg border border-border p-4 shadow-sm">
+                    <h4 className="text-sm font-bold text-foreground mb-2">Statut actuel du widget</h4>
+                    <div className="flex items-center gap-3">
+                      <Badge 
+                        variant={
+                          widget.status === 'validated' ? 'default' : 
+                          widget.status === 'rejected' ? 'destructive' : 
+                          widget.status === 'pending' ? 'secondary' : 'outline'
+                        } 
+                        className="capitalize px-3 py-1 text-xs"
+                      >
+                        {widget.status === 'draft' ? 'Brouillon' : 
+                         widget.status === 'pending' ? 'En attente de validation' :
+                         widget.status === 'validated' ? 'Validé' :
+                         widget.status === 'rejected' ? 'Rejeté' : widget.status}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground">
+                        {widget.status === 'draft' && "Votre widget n'est pas encore visible sur le Marketplace."}
+                        {widget.status === 'pending' && "Votre widget est en cours d'examen par nos équipes."}
+                        {widget.status === 'validated' && "Votre widget est approuvé et prêt à être distribué."}
+                        {widget.status === 'rejected' && "Votre widget a été refusé. Veuillez consulter les retours ci-dessous."}
+                      </p>
+                    </div>
                   </div>
-                )}
+
+                  {widget.status === 'rejected' && widget.reviewComments && widget.reviewComments.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <h4 className="text-sm font-bold text-red-800 mb-2">Commentaires de modération</h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {widget.reviewComments.map((comment, idx) => (
+                          <li key={idx} className="text-xs text-red-700">{comment}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-border">
+                    {(widget.status === 'draft' || widget.status === 'rejected') && (
+                      <Button 
+                        className="w-full gap-2" 
+                        onClick={() => handleValidationRequest('pending')}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                        Soumettre pour validation
+                      </Button>
+                    )}
+                    
+                    {widget.status === 'pending' && (
+                      <Button 
+                        className="w-full gap-2" 
+                        variant="outline"
+                        onClick={() => handleValidationRequest('draft')}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        Annuler la soumission
+                      </Button>
+                    )}
+
+                    {widget.status === 'validated' && (
+                      <div className="text-center py-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg font-medium">
+                        Félicitations ! Votre widget est validé.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </Tabs>

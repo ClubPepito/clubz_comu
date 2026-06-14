@@ -69,7 +69,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Generate a subtle hover/alpha variant if needed
       // document.documentElement.style.setProperty('--primary-hover', selectedCommunity.primaryColor + 'ee');
     } else {
-      // Default Clubz Blue
+      // Default Klyb Blue
       document.documentElement.style.setProperty('--primary', '#2A7B9B');
     }
   }, [selectedCommunity]);

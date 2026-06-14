@@ -15,7 +15,7 @@ export const useChatSocket = (roomId: string | null) => {
   const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('clubz_token');
+    const token = localStorage.getItem('klyb_token');
     if (!token) return;
 
     // Use /chats namespace

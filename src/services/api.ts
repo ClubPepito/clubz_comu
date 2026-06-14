@@ -17,7 +17,7 @@ const api = axios.create({
 // Add a request interceptor to add the JWT token to headers
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('clubz_token');
+    const token = localStorage.getItem('klyb_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -63,14 +63,14 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem('clubz_refresh_token');
+      const refreshToken = localStorage.getItem('klyb_refresh_token');
       if (refreshToken) {
         try {
           const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
           const newAccessToken = res.data?.data?.accessToken || res.data?.data?.token;
 
           if (newAccessToken) {
-            localStorage.setItem('clubz_token', newAccessToken);
+            localStorage.setItem('klyb_token', newAccessToken);
             api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
@@ -82,8 +82,8 @@ api.interceptors.response.use(
           processQueue(refreshError, null);
           isRefreshing = false;
           
-          localStorage.removeItem('clubz_token');
-          localStorage.removeItem('clubz_refresh_token');
+          localStorage.removeItem('klyb_token');
+          localStorage.removeItem('klyb_refresh_token');
           if (window.location.pathname !== '/login') {
             window.location.href = '/login';
           }
@@ -91,7 +91,7 @@ api.interceptors.response.use(
         }
       } else {
         isRefreshing = false;
-        localStorage.removeItem('clubz_token');
+        localStorage.removeItem('klyb_token');
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
@@ -105,6 +105,11 @@ export const authService = {
   login: (data: any) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data: any) => api.patch('/auth/me', data),
+};
+
+export const userService = {
+  generateApiKey: () => api.post('/users/api-key'),
+  revokeApiKey: () => api.delete('/users/api-key'),
 };
 
 export const eventService = {
@@ -281,6 +286,9 @@ export const widgetLibraryService = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+  /** Modérer un widget (validation/rejet) */
+  review: (id: string, data: { status: 'validated' | 'rejected'; reviewComments?: string }) => 
+    api.post(`/widget-library/${id}/review`, data),
 };
 
 // ============================================

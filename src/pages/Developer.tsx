@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
-import { useDeveloperStore } from '@/store/developerStore';
 import { useAuth } from '@/context/AuthContext';
 import { WidgetList } from '@/components/widgets/WidgetList';
 import { Loader2, Key, Trash2, Plus, Copy, Check, Terminal } from 'lucide-react';
@@ -14,23 +13,61 @@ import { Documentation } from '@/components/developer/Documentation';
 import { BRAND_NAME } from '@/constants/branding';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Layers } from 'lucide-react';
+import { userService } from '@/services/api';
+import toast from 'react-hot-toast';
 
 export default function Developer() {
   const { definitions, isLoading, fetchMyWidgets, removeDraft, submitForModeration } = useWidgetLibraryStore();
-  const { apiKeys, generateKey, revokeKey } = useDeveloperStore();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedWidget, setSelectedWidget] = useState<any | null>(null);
   
-  const [newKeyName, setNewKeyName] = useState('');
+  const [localApiKey, setLocalApiKey] = useState<string | null>(null);
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [apiKeyHint, setApiKeyHint] = useState<string | null>(null);
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const handleGenerate = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user?.apiKeyHint) {
+      setHasApiKey(true);
+      setApiKeyHint(user.apiKeyHint);
+    } else {
+      setHasApiKey(false);
+      setApiKeyHint(null);
+    }
+  }, [user]);
+
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newKeyName.trim()) return;
-    generateKey(newKeyName.trim());
-    setNewKeyName('');
+    setIsGeneratingKey(true);
+    try {
+      const res = await userService.generateApiKey();
+      setLocalApiKey(res.data.apiKey);
+      setHasApiKey(true);
+      setApiKeyHint(`klyb_***${res.data.apiKey.slice(-4)}`);
+      if (refreshUser) await refreshUser();
+      toast.success('Clé API générée avec succès');
+    } catch (err) {
+      toast.error('Erreur lors de la génération de la clé API');
+    } finally {
+      setIsGeneratingKey(false);
+    }
+  };
+
+  const handleRevoke = async () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir révoquer cette clé ? Les applications l\'utilisant ne fonctionneront plus.')) return;
+    try {
+      await userService.revokeApiKey();
+      setLocalApiKey(null);
+      setHasApiKey(false);
+      setApiKeyHint(null);
+      if (refreshUser) await refreshUser();
+      toast.success('Clé API révoquée');
+    } catch (err) {
+      toast.error('Erreur lors de la révocation');
+    }
   };
 
   const handleCopy = (key: string) => {
@@ -64,20 +101,6 @@ export default function Developer() {
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Espace Développeur</h1>
           <p className="text-muted-foreground mt-2 text-lg">Gérez vos widgets et vos clés API CLI pour {BRAND_NAME}.</p>
         </div>
-        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-none text-white shadow-lg shadow-blue-500/20 self-center">
-          <CardContent className="px-4 py-2 flex items-center gap-3">
-            <div>
-              <div className="text-[10px] font-semibold opacity-80 uppercase tracking-wider">Status du service</div>
-              <div className="flex items-center gap-2 font-bold text-sm">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-                </span>
-                API Opérationnelle
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
 
@@ -146,70 +169,76 @@ export default function Developer() {
               <Card>
                 <CardHeader className="border-b border-border bg-muted/30">
                   <CardTitle className="flex items-center gap-2">
-                    <Key className="w-5 h-5 text-indigo-500" /> Vos Clés API
+                    <Key className="w-5 h-5 text-indigo-500" /> Votre Clé API CLI
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <form onSubmit={handleGenerate} className="flex gap-3 mb-8">
-                    <Input
-                      type="text"
-                      placeholder="Nom de la clé (ex: MacBook Pro)"
-                      className="flex-1"
-                      value={newKeyName}
-                      onChange={(e) => setNewKeyName(e.target.value)}
-                    />
-                    <Button type="submit" disabled={!newKeyName.trim()} className="gap-2">
-                      <Plus className="w-4 h-4" /> Générer
-                    </Button>
-                  </form>
-
-                  <div className="space-y-4">
-                    {apiKeys.length === 0 ? (
+                  
+                  {!hasApiKey ? (
+                    <div className="space-y-4">
                       <div className="text-center py-12 border-2 border-dashed border-border rounded-xl">
                         <Key className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                         <p className="text-muted-foreground font-medium">Aucune clé active.</p>
-                        <p className="text-muted-foreground text-sm">Créez-en une pour commencer à développer.</p>
+                        <p className="text-muted-foreground text-sm mb-6">Créez-en une pour commencer à développer via la CLI Klyb.</p>
+                        
+                        <form onSubmit={handleGenerate}>
+                          <Button type="submit" disabled={isGeneratingKey} className="gap-2">
+                            {isGeneratingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Générer ma clé API
+                          </Button>
+                        </form>
                       </div>
-                    ) : (
-                      apiKeys.map((key) => (
-                        <div
-                          key={key.id}
-                          className="group flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border transition-all hover:border-indigo-200 hover:shadow-sm"
-                        >
-                          <div className="flex-1 min-w-0 mr-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-bold text-foreground">{key.name}</span>
-                              <Badge variant="outline" className="text-xs font-normal">
-                                {new Date(key.createdAt).toLocaleDateString('fr-FR')}
-                              </Badge>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="group flex flex-col p-4 bg-muted/30 rounded-xl border border-border transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-foreground">Clé Principale</span>
+                            <Badge variant="outline" className="text-xs font-normal text-emerald-600 border-emerald-200 bg-emerald-50">
+                              Active
+                            </Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRevoke}
+                            className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Révoquer
+                          </Button>
+                        </div>
+
+                        {localApiKey ? (
+                          <>
+                            <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-emerald-800 text-sm mb-4">
+                              <strong>Nouvelle clé générée !</strong> Copiez-la maintenant. Pour des raisons de sécurité, vous ne pourrez plus la voir une fois cette page fermée.
                             </div>
-                            <div className="font-mono text-sm text-muted-foreground truncate bg-background px-3 py-2 rounded border border-border flex items-center justify-between">
-                              <span className="truncate">{key.key}</span>
+                            <div className="font-mono text-sm text-muted-foreground bg-background px-4 py-3 rounded-lg border border-border flex items-center justify-between break-all">
+                              <span>{localApiKey}</span>
                               <button
-                                onClick={() => handleCopy(key.key)}
-                                className="ml-2 text-muted-foreground hover:text-indigo-600 transition-colors flex-shrink-0"
+                                onClick={() => handleCopy(localApiKey)}
+                                className="ml-4 text-muted-foreground hover:text-indigo-600 transition-colors flex-shrink-0 bg-muted/50 p-2 rounded-md"
                               >
-                                {copiedKey === key.key ? (
+                                {copiedKey === localApiKey ? (
                                   <Check className="w-4 h-4 text-green-500" />
                                 ) : (
                                   <Copy className="w-4 h-4" />
                                 )}
                               </button>
                             </div>
+                          </>
+                        ) : (
+                          <div className="font-mono text-sm text-muted-foreground bg-background px-4 py-3 rounded-lg border border-border flex items-center justify-between">
+                            <span>{apiKeyHint}</span>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => revokeKey(key.id)}
-                            className="text-muted-foreground hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Révoquer"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                        )}
+                      </div>
+                      
+                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-amber-800 text-sm">
+                        <strong>Attention :</strong> Gardez votre clé secrète. Toute personne la possédant peut déployer des widgets en votre nom. Si elle est compromise, révoquez-la immédiatement.
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

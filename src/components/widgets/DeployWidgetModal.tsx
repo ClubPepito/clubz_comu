@@ -47,7 +47,7 @@ export function DeployWidgetModal() {
     let foundManifest: File | null = null;
     for (let i = 0; i < selectedFiles.length; i++) {
       const file = selectedFiles[i];
-      if (file.name === 'clubz.json' || file.name === 'widget.json') {
+      if (file.name === 'klyb.json' || file.name === 'widget.json') {
         foundManifest = file;
         break;
       }
@@ -64,7 +64,7 @@ export function DeployWidgetModal() {
         setManifestData(null);
       }
     } else {
-      toast.error("Aucun fichier clubz.json ou widget.json trouvé dans le dossier.");
+      toast.error("Aucun fichier klyb.json ou widget.json trouvé dans le dossier.");
       setManifestData(null);
     }
   };
@@ -136,7 +136,7 @@ export function DeployWidgetModal() {
               <FileArchive className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="font-semibold text-lg mb-1">Sélectionnez le dossier de votre widget</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Le dossier doit contenir un fichier <code className="bg-muted px-1 rounded">clubz.json</code> et vos fichiers buildés. Les fichiers <code className="bg-muted px-1 rounded">.env</code> locaux seront ignorés.
+                Le dossier doit contenir un fichier <code className="bg-muted px-1 rounded">klyb.json</code> et vos fichiers buildés. Les fichiers <code className="bg-muted px-1 rounded">.env</code> locaux seront ignorés.
               </p>
               <Button variant="outline">Parcourir...</Button>
             </div>
@@ -144,7 +144,7 @@ export function DeployWidgetModal() {
             <div className="text-center py-8">
               <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
               <p className="font-semibold text-red-600">Fichier de configuration introuvable.</p>
-              <p className="text-sm text-muted-foreground mt-2 mb-4">Veuillez sélectionner un dossier contenant clubz.json ou widget.json.</p>
+              <p className="text-sm text-muted-foreground mt-2 mb-4">Veuillez sélectionner un dossier contenant klyb.json ou widget.json.</p>
               <Button variant="outline" onClick={resetState}>Réessayer</Button>
             </div>
           ) : (
@@ -230,7 +230,7 @@ export function DeployWidgetModal() {
                     <Textarea 
                       value={envData} 
                       onChange={e => setEnvData(e.target.value)}
-                      placeholder="API_KEY=sk_test_12345&#10;NEXT_PUBLIC_API_URL=https://api.clubz.co"
+                      placeholder="API_KEY=sk_test_12345&#10;NEXT_PUBLIC_API_URL=https://api.klyb.co"
                       className="font-mono text-sm"
                       rows={6}
                     />

@@ -38,6 +38,6 @@ export const useDeveloperStore = create<DeveloperState>()(
         set((state) => ({ apiKeys: state.apiKeys.filter((k) => k.id !== id) }));
       },
     }),
-    { name: 'clubz-admin-developer-storage' }
+    { name: 'klyb-admin-developer-storage' }
   )
 );
