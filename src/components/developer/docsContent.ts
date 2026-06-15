@@ -117,7 +117,7 @@ export function UserProfile() {
   const { user, isAuthenticated } = useUser();
   
   if (!isAuthenticated) return <p>Veuillez vous connecter</p>;
-  return <p>Bonjour {user.name} !</p>;
+  return <p>Bonjour @{user.username} !</p>;
 }
 \`\`\`
 

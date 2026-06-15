@@ -33,7 +33,7 @@ export function WidgetRunner({ widgetId, remoteUrl, name, className }: WidgetRun
 
         switch (message.action) {
           case 'GET_USER':
-            responseData = user ? { id: user.id, name: user.name || user.email } : null;
+            responseData = user ? { id: user.id, name: user.username || user.email } : null;
             break;
 
           case 'GET_SESSION_TOKEN':
