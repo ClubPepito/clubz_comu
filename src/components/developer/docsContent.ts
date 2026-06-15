@@ -123,6 +123,31 @@ export function UserProfile() {
 
 ## Actions Natives (Le Bridge)
 
+### \`bridge.getConfig()\`
+Récupère de manière asynchrone la configuration spécifique à l'instance de votre widget. Cela inclut les variables d'environnement (\`env\`), les propriétés du composant (\`props\`), et le thème de la communauté hôte (\`theme\`). C'est l'approche recommandée pour s'assurer d'avoir le contexte complet, que ce soit sur l'application mobile ou sur le simulateur de développement web.
+
+\`\`\`tsx
+import { bridge } from '@klyb/sdk';
+import { useEffect, useState } from 'react';
+
+export function ConfiguredWidget() {
+  const [config, setConfig] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadConfig() {
+      const widgetConfig = await bridge.getConfig();
+      setConfig(widgetConfig);
+    }
+    loadConfig();
+  }, []);
+
+  if (!config) return <p>Chargement de la configuration...</p>;
+
+  // Exemple: Utilisation de l'URL API définie par l'administrateur
+  return <div>URL du Backend: {config.env.VITE_API_BASE_URL}</div>;
+}
+\`\`\`
+
 ### \`bridge.resize(height)\`
 L'application mobile de Klyb enferme votre widget dans une zone délimitée. Si le contenu de votre widget dépasse, il sera coupé. Appelez \`bridge.resize()\` pour forcer l'application mobile à adapter sa hauteur à votre contenu !
 
@@ -201,8 +226,10 @@ Lorsque votre widget est chargé, Klyb lui injecte un **Identity JWT**. Ce jeton
 **Comment l'utiliser ?**
 1. **Côté Widget (Frontend)** : Vous récupérez le jeton injecté et l'envoyez dans l'en-tête de vos requêtes vers votre propre backend :
    \`\`\`typescript
-   // Le jeton est disponible globalement ou via le SDK
-   const token = window.KLYB_CONTEXT?.props?.identityToken;
+   // Le jeton est disponible via le SDK (le Bridge)
+   import { bridge } from '@klyb/sdk';
+   
+   const token = await bridge.getSessionToken();
    
    await fetch('https://votre-backend.com/api/action', {
      headers: { 'Authorization': \`Bearer \${token}\` }
@@ -257,10 +284,12 @@ jwt.verify(token, getKey, {
 
 Si votre backend vous renvoie une erreur \`401 Unauthorized\` parce que le jeton a expiré, votre code frontal peut en demander un neuf sans recharger toute la page, grâce au bridge de Klyb :
 
-\`\`\`javascript
+\`\`\`typescript
+import { bridge } from '@klyb/sdk';
+
 try {
   // Rafraîchit silencieusement le jeton auprès de l'application hôte
-  const freshToken = await window.Klyb.getIdentityToken();
+  const freshToken = await bridge.getSessionToken();
   // Relancez votre requête HTTP avec ce freshToken !
 } catch (error) {
   console.error("Impossible de rafraîchir le jeton", error);
