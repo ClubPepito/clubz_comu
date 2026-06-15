@@ -10,11 +10,23 @@ import { Lock, Mail, Loader2, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { APP_NAME } from '../constants/app';
 import { BRAND_DOMAIN } from '@/constants/branding';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -31,6 +43,22 @@ const Login = () => {
       toast.error(err.response?.data?.message || 'Identifiants invalides');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotLoading(true);
+    try {
+      await authService.forgotPassword({ email: forgotEmail });
+      toast.success('Si l\'adresse existe, un lien a été envoyé par e-mail.');
+      setShowForgotModal(false);
+      setForgotEmail('');
+    } catch (err: any) {
+      toast.error('Une erreur est survenue.');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -73,7 +101,7 @@ const Login = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center ml-1">
                   <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Mot de passe</Label>
-                  <button type="button" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Oublié ?</button>
+                  <button type="button" onClick={() => setShowForgotModal(true)} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Oublié ?</button>
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-4 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" strokeWidth={2.5} />
@@ -100,6 +128,37 @@ const Login = () => {
           </CardContent>
           <div className="h-2 w-full bg-primary/20" />
         </Card>
+
+        <Dialog open={showForgotModal} onOpenChange={setShowForgotModal}>
+          <DialogContent className="sm:max-w-[425px] rounded-2xl border-none shadow-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Mot de passe oublié ?</DialogTitle>
+              <DialogDescription className="text-sm font-medium">
+                Entrez votre adresse e-mail pour recevoir un lien de réinitialisation de mot de passe.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleForgotPassword} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">E-mail</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  placeholder="nom@exemple.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="h-12 bg-muted/30 border-2 border-transparent focus-visible:border-primary/30 rounded-xl"
+                  required
+                />
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button type="submit" disabled={forgotLoading} className="rounded-xl font-bold gap-2">
+                  {forgotLoading ? <Loader2 className="animate-spin h-4 w-4" /> : null}
+                  Envoyer le lien
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

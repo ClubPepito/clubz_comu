@@ -105,6 +105,7 @@ export const authService = {
   login: (data: any) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data: any) => api.patch('/auth/me', data),
+  forgotPassword: (data: { email: string }) => api.post('/auth/forgot-password', data),
 };
 
 export const userService = {
