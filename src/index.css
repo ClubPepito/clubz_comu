@@ -1,10 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
 @plugin "@tailwindcss/typography";
 
 @theme {
-  /* Tailwind v4 direct colors */
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Klyb brand */
   --color-primary: #2A7B9B;
   --color-primary-foreground: #FFFFFF;
 
@@ -36,42 +39,66 @@
   --color-success: #115E59;
   --color-warning: #F59E0B;
   --color-info: #3B82F6;
+  --color-tertiary: #3D8E81;
+
+  --color-sidebar: #FFFFFF;
+  --color-sidebar-foreground: #111827;
+  --color-sidebar-border: #E5E7EB;
+  --color-sidebar-accent: #E9F2F5;
+  --color-sidebar-accent-foreground: #2A7B9B;
+  --color-sidebar-primary: #2A7B9B;
+  --color-sidebar-primary-foreground: #FFFFFF;
+
+  --color-chart-1: #2A7B9B;
+  --color-chart-2: #3D8E81;
+  --color-chart-3: #94C1D2;
+  --color-chart-4: #1E5A73;
+  --color-chart-5: #DDF2EE;
 
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
   --radius-sm: 0.25rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 210 20% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     --primary: 197 57% 38%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 168 44% 91%;
-    --secondary-foreground: 197 57% 38%;
+    --secondary-foreground: 197 42% 28%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
     --accent: 197 57% 95%;
     --accent-foreground: 197 57% 38%;
     --destructive: 0 74% 42%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 197 57% 38%;
     --radius: 0.75rem;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-accent: 197 57% 95%;
+    --sidebar-accent-foreground: 197 57% 38%;
+    --sidebar-primary: 197 57% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 222 47% 6%;
     --foreground: 210 40% 98%;
-    --card: 217 33% 17%;
+    --card: 217 33% 12%;
     --card-foreground: 210 40% 98%;
-    --popover: 217 33% 17%;
+    --popover: 217 33% 12%;
     --popover-foreground: 210 40% 98%;
     --primary: 197 52% 48%;
     --primary-foreground: 222 47% 11%;
@@ -83,13 +110,18 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
+    --border: 217 32% 20%;
+    --input: 217 32% 20%;
     --ring: 197 52% 48%;
+    --sidebar: 222 47% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-border: 217 32% 20%;
+    --sidebar-accent: 217 32% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-primary: 197 52% 48%;
+    --sidebar-primary-foreground: 222 47% 11%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -98,9 +130,18 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  /* Reset link styles explicitly to avoid blue/underlined default */
   a {
     text-decoration: none;
     color: inherit;
+  }
+}
+
+@layer utilities {
+  .shadow-klyb {
+    box-shadow: 0 4px 24px -4px rgba(42, 123, 155, 0.12);
+  }
+
+  .shadow-klyb-sm {
+    box-shadow: 0 2px 12px -2px rgba(42, 123, 155, 0.08);
   }
 }

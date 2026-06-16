@@ -1,97 +1,116 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { communityService } from '../services/api';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { communityService } from "../services/api"
+import { useAuth } from "./AuthContext"
 
 interface Community {
-  id: string;
-  name: string;
-  description?: string;
-  coverImage?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
+  id: string
+  name: string
+  description?: string
+  coverImage?: string
+  primaryColor?: string
+  secondaryColor?: string
 }
 
 interface CommunityContextType {
-  communities: Community[];
-  selectedCommunityId: string | null;
-  selectedCommunity: Community | null;
-  setSelectedCommunityId: (id: string | null) => void;
-  loading: boolean;
-  refreshCommunities: () => Promise<void>;
+  communities: Community[]
+  selectedCommunityId: string | null
+  selectedCommunity: Community | null
+  setSelectedCommunityId: (id: string | null) => void
+  loading: boolean
+  pendingRequestsCount: number
+  refreshCommunities: () => Promise<void>
+  refreshPendingRequestsCount: () => Promise<void>
 }
 
-const CommunityContext = createContext<CommunityContextType | undefined>(undefined);
+const CommunityContext = createContext<CommunityContextType | undefined>(undefined)
 
 export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { token, user } = useAuth();
-  const [communities, setCommunities] = useState<Community[]>([]);
+  const { token, user } = useAuth()
+  const [communities, setCommunities] = useState<Community[]>([])
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(
-    localStorage.getItem('selected_community_id')
-  );
-  const [loading, setLoading] = useState(false);
+    localStorage.getItem("selected_community_id")
+  )
+  const [loading, setLoading] = useState(false)
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
 
   const fetchCommunities = async () => {
     if (!token) {
-      setCommunities([]);
-      return;
+      setCommunities([])
+      return
     }
 
     try {
-      setLoading(true);
-      const res = await communityService.getAll();
-      const fetchedCommunities = res.data || [];
-      setCommunities(fetchedCommunities);
+      setLoading(true)
+      const res = await communityService.getAll()
+      setCommunities(res.data || [])
     } catch (err) {
-      console.error('Failed to fetch communities', err);
+      console.error("Failed to fetch communities", err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const refreshPendingRequestsCount = useCallback(async () => {
+    if (!selectedCommunityId || !token) {
+      setPendingRequestsCount(0)
+      return
+    }
+    try {
+      const res = await communityService.getPendingRequests(selectedCommunityId)
+      setPendingRequestsCount((res.data || []).length)
+    } catch {
+      setPendingRequestsCount(0)
+    }
+  }, [selectedCommunityId, token])
 
   useEffect(() => {
-    fetchCommunities();
-  }, [token, user?.id]);
+    fetchCommunities()
+  }, [token, user?.id])
+
+  useEffect(() => {
+    refreshPendingRequestsCount()
+  }, [refreshPendingRequestsCount])
 
   useEffect(() => {
     if (selectedCommunityId) {
-      localStorage.setItem('selected_community_id', selectedCommunityId);
+      localStorage.setItem("selected_community_id", selectedCommunityId)
     } else {
-      localStorage.removeItem('selected_community_id');
+      localStorage.removeItem("selected_community_id")
     }
-  }, [selectedCommunityId]);
+  }, [selectedCommunityId])
 
-  const selectedCommunity = communities.find(c => c.id === selectedCommunityId) || null;
+  const selectedCommunity = communities.find((c) => c.id === selectedCommunityId) || null
 
-  // Apply community theme
   useEffect(() => {
     if (selectedCommunity?.primaryColor) {
-      document.documentElement.style.setProperty('--primary', selectedCommunity.primaryColor);
-      // Generate a subtle hover/alpha variant if needed
-      // document.documentElement.style.setProperty('--primary-hover', selectedCommunity.primaryColor + 'ee');
+      document.documentElement.style.setProperty("--primary", selectedCommunity.primaryColor)
     } else {
-      // Default Klyb Blue
-      document.documentElement.style.setProperty('--primary', '#2A7B9B');
+      document.documentElement.style.setProperty("--primary", "#2A7B9B")
     }
-  }, [selectedCommunity]);
+  }, [selectedCommunity])
 
   return (
-    <CommunityContext.Provider value={{ 
-      communities, 
-      selectedCommunityId, 
-      selectedCommunity,
-      setSelectedCommunityId, 
-      loading,
-      refreshCommunities: fetchCommunities
-    }}>
+    <CommunityContext.Provider
+      value={{
+        communities,
+        selectedCommunityId,
+        selectedCommunity,
+        setSelectedCommunityId,
+        loading,
+        pendingRequestsCount,
+        refreshCommunities: fetchCommunities,
+        refreshPendingRequestsCount,
+      }}
+    >
       {children}
     </CommunityContext.Provider>
-  );
-};
+  )
+}
 
 export const useCommunity = () => {
-  const context = useContext(CommunityContext);
+  const context = useContext(CommunityContext)
   if (context === undefined) {
-    throw new Error('useCommunity must be used within a CommunityProvider');
+    throw new Error("useCommunity must be used within a CommunityProvider")
   }
-  return context;
-};
+  return context
+}

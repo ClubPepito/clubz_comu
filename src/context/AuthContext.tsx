@@ -4,7 +4,8 @@ import { authService } from '../services/api';
 interface User {
   id: string;
   email: string;
-  name: string;
+  name: string | null;
+  avatar?: string | null;
   roles?: string[];
   apiKeyHint?: string;
   username?: string;

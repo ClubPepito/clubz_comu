@@ -40,7 +40,7 @@ import { useChatSocket } from '@/hooks/useChatSocket';
 import { channelService, chatService } from '@/services/api';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface Channel {
   id: string;
@@ -499,16 +499,16 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
               disabled={isCreatingChannel}
             />
             <Select value={newChannelType} onValueChange={(v: any) => setNewChannelType(v)} disabled={isCreatingChannel}>
-              <SelectTrigger className="h-12 rounded-2xl bg-muted/50 border-none font-bold uppercase text-[10px] tracking-widest">
+              <SelectTrigger size="lg">
                 <SelectValue placeholder="Type de salon" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-none shadow-xl">
-                <SelectItem value="text" className="font-bold uppercase text-[10px] tracking-widest">
+              <SelectContent>
+                <SelectItem value="text">
                   <div className="flex items-center gap-2">
                     <Hash size={14} /> Salon Textuel
                   </div>
                 </SelectItem>
-                <SelectItem value="announcement" className="font-bold uppercase text-[10px] tracking-widest">
+                <SelectItem value="announcement">
                   <div className="flex items-center gap-2">
                     <Megaphone size={14} /> Salon d'Annonces
                   </div>
