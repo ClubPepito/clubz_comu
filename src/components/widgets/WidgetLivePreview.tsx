@@ -45,10 +45,10 @@ export function WidgetLivePreview({
         )}
         <p className="mx-auto max-w-md text-sm text-muted-foreground">
           {widget.remoteUrl && isAdminAppUrl(widget.remoteUrl)
-            ? "L'URL d'aperçu pointe vers l'application admin au lieu du bundle widget. Le développeur doit redéployer le widget via la CLI."
+            ? "Cette URL pointe vers l'application admin et non vers le bundle du widget. Le développeur doit redéployer le widget via la CLI pour générer une URL MinIO/S3 valide."
             : widget.remoteUrl
-              ? "L'aperçu interactif n'est pas disponible pour cette URL."
-              : "Aucun aperçu disponible. Le développeur doit déployer le widget via la CLI pour générer un lien d'aperçu."}
+              ? "Aperçu interactif indisponible. Vérifiez que le widget a bien été déployé sur le stockage widget (MinIO/S3)."
+              : "Aucun aperçu disponible. Le développeur doit déployer le widget via la CLI."}
         </p>
       </div>
     </div>

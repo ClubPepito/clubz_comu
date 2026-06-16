@@ -54,7 +54,7 @@ export function WidgetPreviewDialog({ widget, open, onClose, onInstall }: Props)
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <PageTabs defaultValue="info">
-            <PageTabsList fullWidth columns={2} className="mb-4">
+            <PageTabsList fullWidth columns={2} className="mb-4 w-full">
               <PageTabsTrigger value="info" icon={Info}>
                 Infos
               </PageTabsTrigger>
