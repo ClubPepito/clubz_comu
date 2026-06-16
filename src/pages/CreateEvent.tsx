@@ -392,7 +392,18 @@ const CreateEvent = () => {
                         <Input className="h-8 text-xs font-bold bg-white" placeholder="ex: Regular" value={tier.name} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].name = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
                       </div>
                       <div className="col-span-3">
-                        <Input type="number" className="h-8 text-xs font-bold bg-white" placeholder="0" value={tier.price} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].price = Number(e.target.value); setFormData({ ...formData, ticketTypes: n }); }} />
+                        <Input 
+                          type="number" 
+                          className="h-8 text-xs font-bold bg-white" 
+                          placeholder="0" 
+                          value={formData.isOnline ? 0 : tier.price} 
+                          disabled={formData.isOnline}
+                          onChange={(e) => { 
+                            const n = [...formData.ticketTypes]; 
+                            n[idx].price = formData.isOnline ? 0 : Number(e.target.value); 
+                            setFormData({ ...formData, ticketTypes: n }); 
+                          }} 
+                        />
                       </div>
                       <div className="col-span-3">
                         <Input type="number" className="h-8 text-xs font-bold bg-white" placeholder="100" value={tier.totalQuantity} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].totalQuantity = Number(e.target.value); setFormData({ ...formData, ticketTypes: n }); }} />
@@ -487,7 +498,17 @@ const CreateEvent = () => {
                       <span className="text-[10px] font-black uppercase tracking-widest">En Ligne</span>
                     </div>
                     <button
-                      onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })}
+                      onClick={() => {
+                        const newIsOnline = !formData.isOnline;
+                        const updatedTicketTypes = newIsOnline
+                          ? formData.ticketTypes.map(t => ({ ...t, price: 0 }))
+                          : formData.ticketTypes;
+                        setFormData({ 
+                          ...formData, 
+                          isOnline: newIsOnline,
+                          ticketTypes: updatedTicketTypes
+                        });
+                      }}
                       className={cn("text-[8px] font-black uppercase px-2.5 py-1 rounded-lg transition-all", formData.isOnline ? "bg-primary text-white shadow-sm" : "bg-gray-200 text-gray-500")}
                     >
                       {formData.isOnline ? 'Activé' : 'Désactivé'}

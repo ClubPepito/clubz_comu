@@ -35,8 +35,8 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await authService.login({ email, password });
-      const { accessToken, refreshToken, user: userData } = res.data.data;
-      login(accessToken, userData, refreshToken);
+      const { accessToken, token, refreshToken, user: userData } = res.data.data;
+      login(accessToken || token, userData, refreshToken);
       toast.success('Bon retour parmi nous !');
       navigate('/');
     } catch (err: any) {

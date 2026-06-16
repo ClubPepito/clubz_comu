@@ -531,7 +531,7 @@ const CommunitySettings = () => {
                     </div>
 
                     <div className="space-y-1.5 col-span-2">
-                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">URL du Document de Justification (PDF, Image...) (Optionnel)</Label>
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">URL du Document de Justification (PDF, Image...) *</Label>
                       <Input 
                         placeholder="https://example.com/justificatif.pdf" 
                         value={kycUrl}
