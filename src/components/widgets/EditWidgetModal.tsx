@@ -11,6 +11,8 @@ import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { WidgetRunner } from './WidgetRunner';
+import { getWidgetPreviewImage, isEmbeddableWidgetUrl } from '@/lib/widget-preview';
 
 interface Props {
   open: boolean;
@@ -214,20 +216,25 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
 
             {/* TAB: Aperçu (Sandbox) */}
             <PageTabsContent value="preview" className="mt-4">
-              <div className="bg-muted/30 border border-border rounded-xl p-4 overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
-                {widget.remoteUrl ? (
-                  <iframe 
-                    src={widget.remoteUrl} 
-                    className="w-full h-[500px] border border-border/50 rounded-lg shadow-inner bg-white" 
-                    title="Widget Sandbox Preview"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              <div className="flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/30 p-4">
+                {widget.remoteUrl && isEmbeddableWidgetUrl(widget.remoteUrl) ? (
+                  <WidgetRunner
+                    widgetId={widget.id}
+                    remoteUrl={widget.remoteUrl}
+                    name={widget.name}
+                    className="h-[500px] w-full rounded-lg border border-border/50 bg-background"
                   />
                 ) : (
-                  <div className="text-center space-y-3">
-                    <MonitorPlay className="w-12 h-12 text-muted-foreground/50 mx-auto" />
-                    <p className="text-muted-foreground text-sm max-w-sm">
-                      Aucun aperçu disponible. <br/>
-                      Vous devez déployer votre widget au moins une fois via la CLI pour générer un lien d'aperçu.
+                  <div className="w-full space-y-4 text-center">
+                    <img
+                      src={getWidgetPreviewImage(widget)}
+                      alt={`Aperçu de ${widget.name}`}
+                      className="mx-auto aspect-video w-full max-w-xl rounded-lg border border-border object-cover"
+                    />
+                    <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+                      {widget.remoteUrl
+                        ? "L'aperçu interactif n'est pas disponible pour cette URL. Déployez le widget via la CLI pour obtenir un lien d'aperçu hébergé."
+                        : "Aucun aperçu disponible. Déployez votre widget au moins une fois via la CLI pour générer un lien d'aperçu."}
                     </p>
                   </div>
                 )}
