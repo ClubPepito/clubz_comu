@@ -1,24 +1,22 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Layout, Box, Globe, Filter } from 'lucide-react';
+import { Search, Layout, Box, Globe, Filter, Loader2 } from 'lucide-react';
 import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { MarketplaceItem } from '@/components/widgets/MarketplaceItem';
 import { WidgetPreviewDialog } from '@/components/widgets/WidgetPreviewDialog';
 import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
 import { widgetInstallationService } from '@/services/api';
 import { useCommunity } from '@/context/CommunityContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { PageLoader } from '@/components/layout/PageLoader';
-import { PageShell } from '@/components/layout/PageShell';
-import { SearchField } from '@/components/layout/SearchField';
-import { PageTabs, PageTabsList, PageTabsTrigger, PageTabsContent } from '@/components/layout/PageTabs';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 export default function Marketplace() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [previewWidget, setPreviewWidget] = useState<WidgetDefinition | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
 
   const { getValidated, fetchMarketplace, isLoading } = useWidgetLibraryStore();
   const { selectedCommunityId } = useCommunity();
@@ -65,38 +63,51 @@ export default function Marketplace() {
   };
 
   return (
-    <PageShell>
-      <PageHeader
-        title="Marketplace"
-        description="Découvrez des widgets et pages créés par la communauté"
-        actions={
-          <SearchField
-            placeholder="Rechercher des widgets…"
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
+      {/* Header + Search */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div>
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Marketplace</h1>
+          <p className="text-muted-foreground mt-2 text-lg">
+            Découvrez des widgets et pages créés par la communauté.
+          </p>
+        </div>
+
+        <div className="relative w-full md:w-96">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <Input
+            type="text"
+            className="pl-9"
+            placeholder="Rechercher des widgets..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            containerClassName="md:w-80"
           />
-        }
-      />
+        </div>
+      </div>
 
-      <PageTabs defaultValue="all" onValueChange={(v) => v && setActiveTab(v)}>
-        <PageTabsList>
-          <PageTabsTrigger value="all" icon={Globe}>
-            Tout
-          </PageTabsTrigger>
-          <PageTabsTrigger value="widgets" icon={Box}>
-            Widgets
-          </PageTabsTrigger>
-          <PageTabsTrigger value="pages" icon={Layout}>
-            Pages
-          </PageTabsTrigger>
-        </PageTabsList>
+      <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="mb-8">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            <Globe className="w-4 h-4" /> Tout
+          </TabsTrigger>
+          <TabsTrigger value="widgets" className="flex items-center gap-2">
+            <Box className="w-4 h-4" /> Widgets
+          </TabsTrigger>
+          <TabsTrigger value="pages" className="flex items-center gap-2">
+            <Layout className="w-4 h-4" /> Pages
+          </TabsTrigger>
+        </TabsList>
 
-        <PageTabsContent value={activeTab}>
+        <TabsContent value={activeTab}>
           {isLoading ? (
-            <PageLoader label="Chargement de la marketplace…" />
+            <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span>Chargement de la marketplace...</span>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredWidgets.length > 0 ? (
                 filteredWidgets.map((widget) => (
                   <div
@@ -112,11 +123,11 @@ export default function Marketplace() {
                 ))
               ) : (
                 <div className="col-span-full py-20 text-center">
-                  <div className="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-muted">
-                    <Filter className="text-muted-foreground" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                    <Filter className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium text-foreground">Aucun résultat</h3>
-                  <p className="mt-1 text-muted-foreground">Essayez de modifier votre recherche ou vos filtres.</p>
+                  <p className="text-muted-foreground mt-1">Essayez de modifier votre recherche ou vos filtres.</p>
                   <Button
                     variant="link"
                     onClick={() => { setSearch(''); setActiveTab('all'); }}
@@ -128,8 +139,8 @@ export default function Marketplace() {
               )}
             </div>
           )}
-        </PageTabsContent>
-      </PageTabs>
+        </TabsContent>
+      </Tabs>
 
       <WidgetPreviewDialog
         widget={previewWidget}
@@ -137,6 +148,6 @@ export default function Marketplace() {
         onClose={() => setShowPreview(false)}
         onInstall={() => previewWidget && handleInstall(previewWidget)}
       />
-    </PageShell>
+    </div>
   );
 }

@@ -4,14 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PageTabs, PageTabsList, PageTabsTrigger, PageTabsContent } from '@/components/layout/PageTabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
 import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { WidgetLivePreview } from './WidgetLivePreview';
+import toast from 'react-hot-toast';
 
 interface Props {
   open: boolean;
@@ -150,18 +149,18 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-          <PageTabs defaultValue="info" className="w-full">
-            <PageTabsList fullWidth columns={6} className="overflow-x-auto">
-              <PageTabsTrigger value="info" icon={Info}>Infos</PageTabsTrigger>
-              <PageTabsTrigger value="validation" icon={ShieldCheck}>Validation</PageTabsTrigger>
-              <PageTabsTrigger value="preview" icon={MonitorPlay}>Aperçu</PageTabsTrigger>
-              <PageTabsTrigger value="manifest" icon={FileJson}>Manifeste</PageTabsTrigger>
-              <PageTabsTrigger value="settings" icon={Settings}>Réglages</PageTabsTrigger>
-              <PageTabsTrigger value="env" icon={Lock}>Env</PageTabsTrigger>
-            </PageTabsList>
+          <Tabs defaultValue="info" className="w-full">
+            <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 rounded-xl overflow-x-auto">
+              <TabsTrigger value="info" className="gap-2 rounded-lg data-[state=active]:bg-background"><Info className="w-4 h-4"/> Infos</TabsTrigger>
+              <TabsTrigger value="validation" className="gap-2 rounded-lg data-[state=active]:bg-background"><ShieldCheck className="w-4 h-4"/> Validation</TabsTrigger>
+              <TabsTrigger value="preview" className="gap-2 rounded-lg data-[state=active]:bg-background"><MonitorPlay className="w-4 h-4"/> Aperçu</TabsTrigger>
+              <TabsTrigger value="manifest" className="gap-2 rounded-lg data-[state=active]:bg-background"><FileJson className="w-4 h-4"/> Manifeste</TabsTrigger>
+              <TabsTrigger value="settings" className="gap-2 rounded-lg data-[state=active]:bg-background"><Settings className="w-4 h-4"/> Réglages</TabsTrigger>
+              <TabsTrigger value="env" className="gap-2 rounded-lg data-[state=active]:bg-background"><Lock className="w-4 h-4"/> Env</TabsTrigger>
+            </TabsList>
 
             {/* TAB: Informations */}
-            <PageTabsContent value="info" className="mt-4 space-y-4">
+            <TabsContent value="info" className="mt-4 space-y-4">
               <div className="bg-muted/30 border border-border rounded-xl p-6">
                 <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Aperçu Marketplace</h3>
                 <div className="bg-background rounded-lg border border-border p-5 shadow-sm text-left">
@@ -211,15 +210,32 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                   )}
                 </div>
               </div>
-            </PageTabsContent>
+            </TabsContent>
 
             {/* TAB: Aperçu (Sandbox) */}
-            <PageTabsContent value="preview" className="mt-4">
-              <WidgetLivePreview widget={widget} />
-            </PageTabsContent>
+            <TabsContent value="preview" className="mt-4">
+              <div className="bg-muted/30 border border-border rounded-xl p-4 overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+                {widget.remoteUrl ? (
+                  <iframe 
+                    src={widget.remoteUrl} 
+                    className="w-full h-[500px] border border-border/50 rounded-lg shadow-inner bg-white" 
+                    title="Widget Sandbox Preview"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  />
+                ) : (
+                  <div className="text-center space-y-3">
+                    <MonitorPlay className="w-12 h-12 text-muted-foreground/50 mx-auto" />
+                    <p className="text-muted-foreground text-sm max-w-sm">
+                      Aucun aperçu disponible. <br/>
+                      Vous devez déployer votre widget au moins une fois via la CLI pour générer un lien d'aperçu.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
 
             {/* TAB: Manifeste */}
-            <PageTabsContent value="manifest" className="mt-4 space-y-4 text-left">
+            <TabsContent value="manifest" className="mt-4 space-y-4 text-left">
               <div>
                 <Label className="text-sm font-medium mb-1 block">Nom du Widget</Label>
                 <Input 
@@ -245,10 +261,10 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                   rows={4}
                 />
               </div>
-            </PageTabsContent>
+            </TabsContent>
 
             {/* TAB: Réglages */}
-            <PageTabsContent value="settings" className="mt-4 space-y-4">
+            <TabsContent value="settings" className="mt-4 space-y-4">
               <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5 border-b border-border/50 pb-2">
                   <Eye className="w-4 h-4 text-indigo-500" /> Aperçu du formulaire de configuration
@@ -308,10 +324,10 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                   )}
                 </div>
               </div>
-            </PageTabsContent>
+            </TabsContent>
 
             {/* TAB: Env */}
-            <PageTabsContent value="env" className="mt-4 space-y-4">
+            <TabsContent value="env" className="mt-4 space-y-4">
               <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4 text-left">
                 <div className="flex flex-col gap-1">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -378,11 +394,11 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                   </Button>
                 </div>
               </div>
-            </PageTabsContent>
+            </TabsContent>
 
             {/* TAB: Validation */}
             {/* TAB: Validation */}
-            <PageTabsContent value="validation" className="mt-4 space-y-4">
+            <TabsContent value="validation" className="mt-4 space-y-4">
               <div className="bg-muted/30 border border-border rounded-xl p-6 text-left">
                 <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-indigo-500" /> Validation Marketplace
@@ -497,8 +513,8 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                   </div>
                 </div>
               </div>
-            </PageTabsContent>
-          </PageTabs>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="px-6 py-4 border-t border-border shrink-0 bg-muted/10">

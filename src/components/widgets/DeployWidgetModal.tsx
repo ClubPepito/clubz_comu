@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { PageTabs, PageTabsList, PageTabsTrigger, PageTabsContent } from '@/components/layout/PageTabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 export function DeployWidgetModal() {
   const { deployWidget } = useWidgetLibraryStore();
@@ -159,15 +159,15 @@ export function DeployWidgetModal() {
                 </Button>
               </div>
 
-              <PageTabs defaultValue="preview" className="w-full">
-                <PageTabsList fullWidth columns={3}>
-                  <PageTabsTrigger value="preview" icon={Eye}>Aperçu</PageTabsTrigger>
-                  <PageTabsTrigger value="manifest" icon={FileJson}>Manifeste</PageTabsTrigger>
-                  <PageTabsTrigger value="env" icon={Settings2}>Variables (.env)</PageTabsTrigger>
-                </PageTabsList>
+              <Tabs defaultValue="preview" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="preview" className="gap-2"><Eye className="w-4 h-4"/> Aperçu</TabsTrigger>
+                  <TabsTrigger value="manifest" className="gap-2"><FileJson className="w-4 h-4"/> Manifeste</TabsTrigger>
+                  <TabsTrigger value="env" className="gap-2"><Settings2 className="w-4 h-4"/> Variables (.env)</TabsTrigger>
+                </TabsList>
 
                 {/* TAB: Aperçu */}
-                <PageTabsContent value="preview" className="mt-4">
+                <TabsContent value="preview" className="mt-4">
                   <div className="bg-muted/30 border border-border rounded-xl p-6">
                     <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Aperçu Marketplace</h3>
                     <div className="bg-background rounded-lg border border-border p-5 shadow-sm">
@@ -186,10 +186,10 @@ export function DeployWidgetModal() {
                       </div>
                     </div>
                   </div>
-                </PageTabsContent>
+                </TabsContent>
 
                 {/* TAB: Manifeste */}
-                <PageTabsContent value="manifest" className="mt-4 space-y-4">
+                <TabsContent value="manifest" className="mt-4 space-y-4">
                   <div>
                     <label className="text-sm font-medium mb-1 block">Nom du Widget</label>
                     <Input 
@@ -218,10 +218,10 @@ export function DeployWidgetModal() {
                   <p className="text-xs text-muted-foreground">
                     Toute modification ici mettra à jour le fichier <code>{manifestPath?.split('/').pop()}</code> dans l'archive envoyée.
                   </p>
-                </PageTabsContent>
+                </TabsContent>
 
                 {/* TAB: Environnement */}
-                <PageTabsContent value="env" className="mt-4 space-y-4">
+                <TabsContent value="env" className="mt-4 space-y-4">
                   <div className="bg-indigo-50 border border-indigo-100 text-indigo-800 p-3 rounded-lg text-sm">
                     <strong>Sécurité :</strong> Les fichiers <code>.env</code> locaux trouvés dans votre dossier sont automatiquement ignorés lors du déploiement. Renseignez ci-dessous les variables nécessaires pour l'environnement de production.
                   </div>
@@ -235,8 +235,8 @@ export function DeployWidgetModal() {
                       rows={6}
                     />
                   </div>
-                </PageTabsContent>
-              </PageTabs>
+                </TabsContent>
+              </Tabs>
 
               <div className="pt-4 border-t border-border">
                 <Button 

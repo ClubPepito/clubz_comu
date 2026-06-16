@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { widgetLibraryService } from '@/services/api';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 interface WidgetLibraryState {
   definitions: WidgetDefinition[];

@@ -3,7 +3,6 @@ import { Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getWidgetPreviewImage } from '@/lib/widget-preview';
 
 
 
@@ -20,7 +19,7 @@ export function MarketplaceItem({ widget, onInstall }: Props) {
       {/* Zone d'aperçu de l'image */}
       <div className="h-40 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center overflow-hidden">
         <img 
-          src={getWidgetPreviewImage(widget)} 
+          src={widget.previewUrl || '/default-widget-preview.png'} 
           alt={`Aperçu de ${widget.name}`} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
         />
