@@ -43,8 +43,8 @@ const eventSchema = z.object({
   ticketTypes: z.array(
     z.object({
       name: z.string().min(1, 'Le nom du billet est requis'),
-      price: z.number().min(0, 'Le prix doit être ≥ 0'),
-      totalQuantity: z.number().min(1, 'La quantité doit être ≥ 1'),
+      price: z.coerce.number().min(0, 'Le prix doit être ≥ 0'),
+      totalQuantity: z.coerce.number().min(1, 'La quantité doit être ≥ 1'),
     })
   ).optional(),
   shortLink: z.string().max(50).optional().or(z.literal('')),
@@ -219,9 +219,17 @@ const CreateEvent = () => {
         endDate: formData.endDate || null,
         ticketTypes: formData.ticketTypes.map(tier => ({
           ...tier,
+          price: Number(tier.price),
+          totalQuantity: Number(tier.totalQuantity),
+          points: Number(tier.points),
+          order: Number(tier.order),
           salesStartDate: tier.salesStartDate || null,
           salesEndDate: tier.salesEndDate || null
-        }))
+        })),
+        customFields: formData.customFields.map(({ required, ...rest }) => ({
+          ...rest,
+          isRequired: required ?? false,
+        })),
       };
 
       if (isEditMode) await eventService.update(id!, cleanedData);
@@ -231,7 +239,12 @@ const CreateEvent = () => {
       navigate('/events');
     } catch (err: any) {
       console.error('Submit failed', err);
-      toast.error('Erreur lors de la publication');
+      const apiMessage =
+        err?.response?.data?.message;
+      const displayMessage = Array.isArray(apiMessage)
+        ? apiMessage.join(', ')
+        : apiMessage || 'Erreur lors de la publication';
+      toast.error(displayMessage);
     } finally {
       setSubmitting(false);
     }
