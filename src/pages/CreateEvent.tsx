@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { z } from 'zod';
 import { useCommunity } from '../context/CommunityContext';
+import { communityService } from '../services/api';
 import {
   Sparkles,
   Ticket,
@@ -32,6 +34,21 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+
+const eventSchema = z.object({
+  title: z.string().min(1, 'Le titre est requis').max(100),
+  communityId: z.string().min(1, 'La communauté est requise'),
+  startDate: z.string().min(1, 'La date de début est requise'),
+  endDate: z.string().optional(),
+  ticketTypes: z.array(
+    z.object({
+      name: z.string().min(1, 'Le nom du billet est requis'),
+      price: z.number().min(0, 'Le prix doit être ≥ 0'),
+      totalQuantity: z.number().min(1, 'La quantité doit être ≥ 1'),
+    })
+  ).optional(),
+  shortLink: z.string().max(50).optional().or(z.literal('')),
+});
 
 const CreateEvent = () => {
   const navigate = useNavigate();
@@ -70,6 +87,25 @@ const CreateEvent = () => {
 
   const [addressSearch, setAddressSearch] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [communityMembers, setCommunityMembers] = useState<any[]>([]);
+  const [coHostSearch, setCoHostSearch] = useState('');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Sync communityId with sidebar selection
+  useEffect(() => {
+    if (selectedCommunityId && !formData.communityId) {
+      setFormData((prev) => ({ ...prev, communityId: selectedCommunityId }));
+    }
+  }, [selectedCommunityId]);
+
+  // Fetch community members when community changes (for co-host picker)
+  useEffect(() => {
+    const communityId = formData.communityId;
+    if (!communityId) { setCommunityMembers([]); return; }
+    communityService.getMembers(communityId)
+      .then((res) => setCommunityMembers(res.data || []))
+      .catch(() => setCommunityMembers([]));
+  }, [formData.communityId]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -141,7 +177,7 @@ const CreateEvent = () => {
   };
 
   const addCustomField = () => {
-    setFormData({ ...formData, customFields: [...formData.customFields, { label: 'Question', type: 'text', isRequired: false, options: [] }] });
+    setFormData({ ...formData, customFields: [...formData.customFields, { label: '', type: 'text', required: false, options: [] }] });
   };
 
   const removeCustomField = (index: number) => {
@@ -151,9 +187,28 @@ const CreateEvent = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.communityId || !formData.title || !formData.startDate) {
-      return toast.error('Infos manquantes (Titre, Communauté, Date)');
+    // Zod validation
+    const parseResult = eventSchema.safeParse({
+      title: formData.title,
+      communityId: formData.communityId,
+      startDate: formData.startDate,
+      endDate: formData.endDate || undefined,
+      ticketTypes: formData.ticketTypes,
+      shortLink: formData.shortLink || '',
+    });
+
+    if (!parseResult.success) {
+      const errors: Record<string, string> = {};
+      parseResult.error.issues.forEach((issue) => {
+        const path = issue.path.join('.');
+        errors[path] = issue.message;
+      });
+      setValidationErrors(errors);
+      toast.error(parseResult.error.issues[0]?.message || 'Formulaire invalide');
+      return;
     }
+    setValidationErrors({});
+
     try {
       setSubmitting(true);
 
@@ -353,17 +408,57 @@ const CreateEvent = () => {
 
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Co-organisateurs</Label>
-                  <div className="p-3 rounded-xl border border-border bg-muted/30 min-h-[96px] space-y-2">
-                    <div className="flex flex-wrap gap-1.5">
+                  <div className="p-3 rounded-xl border border-border bg-muted/30 space-y-2">
+                    {/* Search input for members */}
+                    <Input
+                      placeholder="Rechercher un membre..."
+                      value={coHostSearch}
+                      onChange={(e) => setCoHostSearch(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    {/* Member suggestions */}
+                    {coHostSearch && (
+                      <div className="max-h-28 overflow-y-auto rounded-lg border border-border bg-card shadow-sm">
+                        {communityMembers
+                          .filter((m) =>
+                            !formData.coHostIds.includes(m.user?.id || m.id) &&
+                            ((m.user?.name || '').toLowerCase().includes(coHostSearch.toLowerCase()) ||
+                             (m.user?.username || '').toLowerCase().includes(coHostSearch.toLowerCase()))
+                          )
+                          .slice(0, 6)
+                          .map((m) => {
+                            const memberId = m.user?.id || m.id;
+                            const memberName = m.user?.name || m.user?.username || memberId;
+                            return (
+                              <button
+                                key={memberId}
+                                className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors"
+                                onClick={() => {
+                                  setFormData({ ...formData, coHostIds: [...formData.coHostIds, memberId] });
+                                  setCoHostSearch('');
+                                }}
+                              >
+                                {memberName}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    )}
+                    {/* Selected co-hosts */}
+                    <div className="flex flex-wrap gap-1.5 min-h-[28px]">
                       {formData.coHostIds.length > 0 ? (
-                        formData.coHostIds.map(id => (
-                          <Badge key={id} variant="secondary" className="bg-card border-border text-[9px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 group">
-                            {id.slice(0, 8)}...
-                            <X size={10} className="cursor-pointer hover:text-destructive" onClick={() => setFormData({ ...formData, coHostIds: formData.coHostIds.filter(cid => cid !== id) })} />
-                          </Badge>
-                        ))
+                        formData.coHostIds.map((coId) => {
+                          const member = communityMembers.find((m) => (m.user?.id || m.id) === coId);
+                          const name = member?.user?.name || member?.user?.username || coId.slice(0, 8) + '...';
+                          return (
+                            <Badge key={coId} variant="secondary" className="bg-card border-border text-[9px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                              {name}
+                              <X size={10} className="cursor-pointer hover:text-destructive" onClick={() => setFormData({ ...formData, coHostIds: formData.coHostIds.filter((cid) => cid !== coId) })} />
+                            </Badge>
+                          );
+                        })
                       ) : (
-                        <p className="text-[10px] text-muted-foreground opacity-60 italic">Aucun co-organisateur sélectionné</p>
+                        <p className="text-[10px] text-muted-foreground opacity-60 italic">Aucun co-organisateur</p>
                       )}
                     </div>
                   </div>
@@ -450,16 +545,53 @@ const CreateEvent = () => {
               <Button variant="outline" size="sm" onClick={addCustomField} className="h-7 px-3 text-[9px] font-bold uppercase"><Plus size={12} className="mr-1" /> Ajouter</Button>
             </CardHeader>
             <CardContent className="p-5 pt-4 space-y-4">
-              <div className="grid grid-cols-12 gap-3 px-1 mb-1">
-                <div className="col-span-11 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Question</div>
-                <div className="col-span-1"></div>
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {formData.customFields.map((field, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <Input placeholder="ex: Quelle est votre pointure ?" value={field.label} onChange={(e) => { const n = [...formData.customFields]; n[idx].label = e.target.value; setFormData({ ...formData, customFields: n }); }} />
-                    <Button variant="ghost" size="icon" onClick={() => removeCustomField(idx)} className="h-9 w-9 text-destructive hover:bg-destructive/5"><Trash2 size={14} /></Button>
+                  <div key={idx} className="p-3 rounded-xl border border-border bg-muted/40 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        placeholder="ex: Quelle est votre pointure ?"
+                        value={field.label}
+                        onChange={(e) => {
+                          const n = [...formData.customFields];
+                          n[idx] = { ...n[idx], label: e.target.value };
+                          setFormData({ ...formData, customFields: n });
+                        }}
+                        className="flex-1"
+                      />
+                      <Select
+                        value={field.type || 'text'}
+                        onValueChange={(val) => {
+                          const n = [...formData.customFields];
+                          n[idx] = { ...n[idx], type: val as any };
+                          setFormData({ ...formData, customFields: n });
+                        }}
+                      >
+                        <SelectTrigger className="w-32 h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">Texte</SelectItem>
+                          <SelectItem value="number">Nombre</SelectItem>
+                          <SelectItem value="select">Liste</SelectItem>
+                          <SelectItem value="checkbox">Case</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="ghost" size="icon" onClick={() => removeCustomField(idx)} className="h-9 w-9 text-destructive hover:bg-destructive/5 shrink-0"><Trash2 size={14} /></Button>
+                    </div>
+                    {/* Options for select type */}
+                    {field.type === 'select' && (
+                      <Input
+                        placeholder="Options séparées par des virgules (ex: S, M, L, XL)"
+                        value={(field.options || []).join(', ')}
+                        onChange={(e) => {
+                          const n = [...formData.customFields];
+                          n[idx] = { ...n[idx], options: e.target.value.split(',').map((o) => o.trim()).filter(Boolean) };
+                          setFormData({ ...formData, customFields: n });
+                        }}
+                        className="text-xs"
+                      />
+                    )}
                   </div>
                 ))}
                 {formData.customFields.length === 0 && (
@@ -546,6 +678,29 @@ const CreateEvent = () => {
                   <h4 className="text-xs font-bold">Privé</h4>
                 </div>
               </div>
+
+              {/* Short link */}
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Lien court (optionnel)</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground shrink-0">klyb.app/e/</span>
+                  <Input
+                    placeholder="mon-evenement"
+                    value={formData.shortLink || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        shortLink: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+                      })
+                    }
+                    className={validationErrors['shortLink'] ? 'border-destructive' : ''}
+                  />
+                </div>
+                {validationErrors['shortLink'] && (
+                  <p className="text-xs text-destructive">{validationErrors['shortLink']}</p>
+                )}
+              </div>
+
               <div className="flex justify-between items-center pt-4"><Button variant="ghost" onClick={() => setTab('form')} className="h-9 text-[10px] uppercase font-bold">Retour</Button><Button onClick={handleSubmit} disabled={submitting} size="sm" className="h-10 px-8 font-bold text-[10px] uppercase tracking-wider shadow-lg shadow-primary/20">{submitting ? <Loader2 className="animate-spin h-4 w-4" /> : 'Publier'}</Button></div>
             </CardContent>
           </Card>

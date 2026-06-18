@@ -34,9 +34,9 @@ const Login = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      login(token, userData, refreshToken);
-      const { token, refreshToken, user: userData } = res.data.data;
       const res = await authService.login({ email, password });
+      const { token, refreshToken, user: userData } = res.data.data;
+      login(token, userData, refreshToken);
       navigate('/');
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Identifiants invalides")

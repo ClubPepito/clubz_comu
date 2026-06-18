@@ -40,13 +40,14 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Add a response interceptor to handle 401/403 errors and refresh token
+// Add a response interceptor to handle 401 errors and refresh token
+// 403 (Forbidden) is propagated as-is — components handle permission errors themselves
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -123,10 +124,6 @@ export const eventService = {
   delete: (id: string) => api.delete(`/events/${id}`),
   duplicate: (id: string) => api.post(`/events/${id}/duplicate`),
 
-  // Tickets
-  getTicketTypes: (id: string) => api.get(`/events/${id}/tickets`),
-  createTicketType: (id: string, data: any) => api.post(`/events/${id}/tickets`, data),
-
   // Analytics & Activity
   getStats: (id: string) => api.get(`/events/${id}/analytics`),
   getGlobalStats: (communityId?: string | null) => api.get('/events/stats/global', { params: { communityId } }),
@@ -144,9 +141,6 @@ export const eventService = {
   autoGenerate: (url: string) => api.post('/events/auto-generate', { url }),
   getCalendar: (id: string) => api.get(`/events/${id}/calendar`),
 
-  // Gamification
-  getGamification: (id: string) => api.get(`/events/${id}/gamification`),
-  updateGamification: (id: string, data: any) => api.patch(`/events/${id}/gamification`, data),
 };
 
 export const communityService = {
@@ -197,10 +191,11 @@ export const communityService = {
   removeMember: (communityId: string, userId: string) =>
     api.delete(`/communities/${communityId}/members/${userId}`),
 
-  // Roles
+  // Roles & Permissions
   getRoles: (communityId: string) => api.get(`/communities/${communityId}/roles`),
   updateMemberRole: (communityId: string, userId: string, roleId: string) =>
     api.post(`/communities/${communityId}/roles/assign`, { userId, roleId }),
+  getMyRole: (communityId: string) => api.get(`/communities/${communityId}/my-role`),
 
   // Widgets
   getWidgets: (communityId: string) => api.get(`/widget-library/community/${communityId}`),
@@ -268,6 +263,24 @@ export const moderationService = {
     api.get(`/moderation/communities/${communityId}/reports`, { params: status ? { status } : {} }),
   updateCommunityReport: (communityId: string, reportId: string, data: { actionTaken: string; note?: string }) =>
     api.patch(`/moderation/communities/${communityId}/reports/${reportId}`, data),
+};
+
+// ============================================
+// Promo Codes
+// ============================================
+export const promoCodeService = {
+  getAll: (eventId: string) => api.get(`/events/${eventId}/promo-codes`),
+  create: (eventId: string, data: {
+    code: string;
+    discountType: 'percentage' | 'fixed';
+    discountValue: number;
+    maxUses?: number;
+    expiresAt?: string;
+  }) => api.post(`/events/${eventId}/promo-codes`, data),
+  update: (eventId: string, promoId: string, data: any) =>
+    api.patch(`/events/${eventId}/promo-codes/${promoId}`, data),
+  delete: (eventId: string, promoId: string) =>
+    api.delete(`/events/${eventId}/promo-codes/${promoId}`),
 };
 
 // ============================================
