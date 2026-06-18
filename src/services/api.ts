@@ -184,6 +184,12 @@ export const communityService = {
   getChannels: (communityId: string) => api.get(`/communities/${communityId}/channels`),
   respondToRequest: (communityId: string, userId: string, action: 'accept' | 'reject') =>
     api.post(`/communities/${communityId}/requests/${userId}/${action}`),
+
+  // Affiliations (communautés enfants)
+  getParentRequests: (communityId: string) =>
+    api.get(`/communities/${communityId}/parent-requests`),
+  respondToParentRequest: (communityId: string, childId: string, action: 'accept' | 'reject') =>
+    api.post(`/communities/${communityId}/parent-requests/${childId}/${action}`),
   inviteMember: (communityId: string, userId: string) =>
     api.post(`/communities/${communityId}/invite`, { userId }),
   kickMember: (communityId: string, userId: string) =>

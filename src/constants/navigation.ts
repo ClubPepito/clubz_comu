@@ -5,6 +5,7 @@ import {
   ShieldAlert,
   Users,
   UserPlus,
+  GitBranch,
   Settings,
   Store,
   Code2,
@@ -16,7 +17,7 @@ export interface NavItem {
   icon: LucideIcon
   label: string
   match?: (path: string) => boolean
-  badgeKey?: "pendingRequests"
+  badgeKey?: "pendingRequests" | "pendingAffiliations"
 }
 
 export interface NavGroup {
@@ -49,6 +50,13 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Adhésions",
         match: (p) => p === "/membership",
         badgeKey: "pendingRequests",
+      },
+      {
+        to: "/affiliations",
+        icon: GitBranch,
+        label: "Affiliations",
+        match: (p) => p === "/affiliations",
+        badgeKey: "pendingAffiliations",
       },
       { to: "/settings", icon: Settings, label: "Paramètres", match: (p) => p === "/settings" },
     ],

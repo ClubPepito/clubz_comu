@@ -9,6 +9,7 @@ import Members from "./pages/Members"
 import Analytics from "./pages/Analytics"
 import CommunitySettings from "./pages/CommunitySettings"
 import MembershipRequests from "./pages/MembershipRequests"
+import AffiliationRequests from "./pages/AffiliationRequests"
 import Moderation from "./pages/Moderation"
 import Login from "./pages/Login"
 import Marketplace from "./pages/Marketplace"
@@ -34,6 +35,7 @@ function App() {
               <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
               <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
               <Route path="/membership" element={<ProtectedRoute><MembershipRequests /></ProtectedRoute>} />
+              <Route path="/affiliations" element={<ProtectedRoute><AffiliationRequests /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/moderation" element={<ProtectedRoute><Moderation /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />

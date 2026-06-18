@@ -18,8 +18,10 @@ interface CommunityContextType {
   setSelectedCommunityId: (id: string | null) => void
   loading: boolean
   pendingRequestsCount: number
+  pendingAffiliationRequestsCount: number
   refreshCommunities: () => Promise<void>
   refreshPendingRequestsCount: () => Promise<void>
+  refreshPendingAffiliationRequestsCount: () => Promise<void>
 }
 
 const CommunityContext = createContext<CommunityContextType | undefined>(undefined)
@@ -32,6 +34,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   )
   const [loading, setLoading] = useState(false)
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
+  const [pendingAffiliationRequestsCount, setPendingAffiliationRequestsCount] = useState(0)
 
   const fetchCommunities = async () => {
     if (!token) {
@@ -63,13 +66,27 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [selectedCommunityId, token])
 
+  const refreshPendingAffiliationRequestsCount = useCallback(async () => {
+    if (!selectedCommunityId || !token) {
+      setPendingAffiliationRequestsCount(0)
+      return
+    }
+    try {
+      const res = await communityService.getParentRequests(selectedCommunityId)
+      setPendingAffiliationRequestsCount((res.data || []).length)
+    } catch {
+      setPendingAffiliationRequestsCount(0)
+    }
+  }, [selectedCommunityId, token])
+
   useEffect(() => {
     fetchCommunities()
   }, [token, user?.id])
 
   useEffect(() => {
     refreshPendingRequestsCount()
-  }, [refreshPendingRequestsCount])
+    refreshPendingAffiliationRequestsCount()
+  }, [refreshPendingRequestsCount, refreshPendingAffiliationRequestsCount])
 
   useEffect(() => {
     if (selectedCommunityId) {
@@ -98,8 +115,10 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setSelectedCommunityId,
         loading,
         pendingRequestsCount,
+        pendingAffiliationRequestsCount,
         refreshCommunities: fetchCommunities,
         refreshPendingRequestsCount,
+        refreshPendingAffiliationRequestsCount,
       }}
     >
       {children}

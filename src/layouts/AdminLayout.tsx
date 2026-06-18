@@ -56,11 +56,13 @@ function NavGroup({
   items,
   pathname,
   pendingRequestsCount,
+  pendingAffiliationRequestsCount,
 }: {
   title: string
   items: NavItem[]
   pathname: string
   pendingRequestsCount: number
+  pendingAffiliationRequestsCount: number
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -72,7 +74,13 @@ function NavGroup({
           key={item.to}
           item={item}
           active={item.match ? item.match(pathname) : pathname === item.to}
-          badge={item.badgeKey === "pendingRequests" ? pendingRequestsCount : undefined}
+          badge={
+            item.badgeKey === "pendingRequests"
+              ? pendingRequestsCount
+              : item.badgeKey === "pendingAffiliations"
+                ? pendingAffiliationRequestsCount
+                : undefined
+          }
         />
       ))}
     </div>
@@ -116,6 +124,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     setSelectedCommunityId,
     loading,
     pendingRequestsCount,
+    pendingAffiliationRequestsCount,
   } = useCommunity()
 
   const avatarUrl = user?.avatar?.trim() ? user.avatar : null
@@ -166,7 +175,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </Select>
           {!selectedCommunityId && (
             <p className="mt-2 px-1 text-[11px] leading-snug text-muted-foreground">
-              Sélectionnez une communauté pour gérer membres, adhésions et paramètres.
+              Sélectionnez une communauté pour gérer membres, adhésions, affiliations et paramètres.
             </p>
           )}
         </div>
@@ -180,6 +189,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 items={group.items}
                 pathname={location.pathname}
                 pendingRequestsCount={pendingRequestsCount}
+                pendingAffiliationRequestsCount={pendingAffiliationRequestsCount}
               />
             ))}
           </nav>
