@@ -696,7 +696,7 @@ const CreateEvent = () => {
               <div className="space-y-1.5">
                 <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Lien court (optionnel)</Label>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground shrink-0">klyb.app/e/</span>
+                  <span className="text-xs text-muted-foreground shrink-0">app.klyb.app/e/</span>
                   <Input
                     placeholder="mon-evenement"
                     value={formData.shortLink || ''}
