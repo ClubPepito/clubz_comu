@@ -59,6 +59,7 @@ export interface Event {
   ticketTypes?: TicketType[]
   customFields?: CustomField[]
   capacity?: number
+  maxAttendees?: number
   attendeesCount?: number
   recentAttendees?: EventAttendee[]
   status?: 'draft' | 'published' | 'cancelled'
@@ -67,12 +68,38 @@ export interface Event {
 }
 
 export interface EventAnalytics {
+  summary?: {
+    revenue: number
+    totalRegistered: number
+    totalCheckedIn: number
+    noShowCount: number
+    noShowRate: string
+  }
+  statsByTicketType?: Array<{
+    name: string
+    sold: number
+    total: number
+    revenue: number
+  }>
   totalRevenue?: number
   checkInCount?: number
   waitlistCount?: number
+  interestedCount?: number
+  ticketsSold?: number
+  totalCapacity?: number
+  checkInRate?: string
+  fillRate?: string
+  conversionRate?: string
   attendeesCount?: number
   revenueChange?: number
-  salesHistory?: Array<{ name: string; sales: number }>
+  salesHistory?: Array<{ name: string; sales: number; revenue?: number }>
+  funnel?: {
+    interested: number
+    going: number
+    checkedIn: number
+    waitlisted: number
+    cancelled: number
+  }
 }
 
 export interface EventFormData {

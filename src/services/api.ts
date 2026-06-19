@@ -127,8 +127,14 @@ export const eventService = {
   // Analytics & Activity
   getStats: (id: string) => api.get(`/events/${id}/analytics`),
   getGlobalStats: (communityId?: string | null) => api.get('/events/stats/global', { params: { communityId } }),
-  getGlobalHistory: (communityId?: string | null) =>
-    api.get('/events/stats/history', { params: communityId ? { communityId } : {} }),
+  getGlobalHistory: (communityId?: string | null, days = 7) =>
+    api.get('/events/stats/history', {
+      params: { ...(communityId ? { communityId } : {}), days },
+    }),
+  getAdvancedStats: (communityId?: string | null, days = 30) =>
+    api.get('/events/stats/advanced', {
+      params: { ...(communityId ? { communityId } : {}), days },
+    }),
   getRecentActivity: (communityId?: string | null) =>
     api.get('/events/activity/recent', { params: communityId ? { communityId } : {} }),
 

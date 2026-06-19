@@ -189,6 +189,15 @@ const EventDetails = () => {
   const revenueChange = analytics?.revenueChange
   const hasRevenueChange = typeof revenueChange === 'number'
 
+  const totalRevenue =
+    analytics?.totalRevenue ?? analytics?.summary?.revenue ?? 0
+  const checkInCount =
+    analytics?.checkInCount ?? analytics?.summary?.totalCheckedIn ?? 0
+  const waitlistCount = analytics?.waitlistCount ?? 0
+  const capacity =
+    analytics?.totalCapacity ?? event.capacity ?? event.maxAttendees ?? 0
+  const salesHistory = analytics?.salesHistory ?? []
+
   return (
     <PageShell>
       <Link
@@ -281,7 +290,7 @@ const EventDetails = () => {
 
         {/* ─── Analytics ─── */}
         <PageTabsContent value="analytics" className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
             <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
               <CardHeader className="p-4 pb-1">
                 <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
@@ -290,7 +299,7 @@ const EventDetails = () => {
               </CardHeader>
               <CardContent className="p-4 pt-0">
                 <div className="text-xl font-black tracking-tighter">
-                  {(analytics?.totalRevenue ?? 0).toLocaleString('fr-FR')} €
+                  {totalRevenue.toLocaleString('fr-FR')} €
                 </div>
                 {hasRevenueChange && (
                   <div className="mt-2 flex items-center gap-1">
@@ -319,9 +328,9 @@ const EventDetails = () => {
               </CardHeader>
               <CardContent className="p-4 pt-0">
                 <div className="text-xl font-black tracking-tighter">
-                  {analytics?.checkInCount || 0}{' '}
+                  {checkInCount}{' '}
                   <span className="text-xs text-muted-foreground font-medium">
-                    / {event.capacity || 0}
+                    / {capacity || 0}
                   </span>
                 </div>
                 <div className="mt-3 h-1 w-full bg-muted rounded-full overflow-hidden">
@@ -330,7 +339,7 @@ const EventDetails = () => {
                     style={{
                       width: `${Math.min(
                         100,
-                        ((analytics?.checkInCount || 0) / (event.capacity || 1)) * 100
+                        (checkInCount / (capacity || 1)) * 100
                       )}%`,
                     }}
                   />
@@ -345,10 +354,55 @@ const EventDetails = () => {
               </CardHeader>
               <CardContent className="p-4 pt-0">
                 <div className="text-xl font-black tracking-tighter text-warning">
-                  {analytics?.waitlistCount || 0}
+                  {waitlistCount}
                 </div>
                 <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50 italic">
-                  {(analytics?.waitlistCount || 0) > 0 ? 'Demande forte' : 'Aucune attente'}
+                  {waitlistCount > 0 ? 'Demande forte' : 'Aucune attente'}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                  Billets vendus
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-black tracking-tighter">
+                  {analytics?.ticketsSold ?? analytics?.summary?.totalRegistered ?? 0}
+                </div>
+                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50">
+                  Remplissage {analytics?.fillRate ?? '-'}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                  Taux check-in
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-black tracking-tighter text-success">
+                  {analytics?.checkInRate ?? '0%'}
+                </div>
+                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50">
+                  No-show {analytics?.summary?.noShowRate ?? '-'}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                  Conversion
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-black tracking-tighter">
+                  {analytics?.conversionRate ?? '-'}
+                </div>
+                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50">
+                  {analytics?.interestedCount ?? 0} intéressés
                 </p>
               </CardContent>
             </Card>
@@ -360,7 +414,7 @@ const EventDetails = () => {
             </CardHeader>
             <CardContent className="p-5 pt-0 h-[280px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={analytics?.salesHistory || []}>
+                <AreaChart data={salesHistory.length > 0 ? salesHistory : [{ name: '-', sales: 0 }]}>
                   <defs>
                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.2} />
@@ -400,6 +454,47 @@ const EventDetails = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+
+          {analytics?.statsByTicketType && analytics.statsByTicketType.length > 0 && (
+            <Card className="border-none shadow-sm rounded-2xl bg-card border border-border">
+              <CardHeader className="p-5 pb-2">
+                <CardTitle className="text-sm font-bold">Performance par billet</CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {analytics.statsByTicketType.map((tt) => (
+                    <div
+                      key={tt.name}
+                      className="rounded-xl border border-border/60 bg-muted/30 p-4"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        {tt.name}
+                      </p>
+                      <p className="mt-1 text-lg font-black tabular-nums">
+                        {tt.revenue.toLocaleString('fr-FR')} €
+                      </p>
+                      <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>{tt.sold} / {tt.total} vendus</span>
+                        <span>
+                          {tt.total > 0
+                            ? `${Math.round((tt.sold / tt.total) * 100)}%`
+                            : '-'}
+                        </span>
+                      </div>
+                      <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary"
+                          style={{
+                            width: `${tt.total > 0 ? Math.min(100, (tt.sold / tt.total) * 100) : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </PageTabsContent>
 
         {/* ─── Attendees ─── */}
