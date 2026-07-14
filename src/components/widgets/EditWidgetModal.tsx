@@ -11,6 +11,7 @@ import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import toast from 'react-hot-toast';
+import { WidgetRunner } from './WidgetRunner';
 
 interface Props {
   open: boolean;
@@ -216,11 +217,12 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
             <TabsContent value="preview" className="mt-4">
               <div className="bg-muted/30 border border-border rounded-xl p-4 overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
                 {widget.remoteUrl ? (
-                  <iframe 
-                    src={widget.remoteUrl} 
-                    className="w-full h-[500px] border border-border/50 rounded-lg shadow-inner bg-white" 
-                    title="Widget Sandbox Preview"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  <WidgetRunner
+                    widgetId={widget.id}
+                    remoteUrl={widget.remoteUrl}
+                    name={widget.name}
+                    config={previewValues}
+                    className="w-full h-[500px] border border-border/50 rounded-lg shadow-inner bg-white"
                   />
                 ) : (
                   <div className="text-center space-y-3">

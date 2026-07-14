@@ -4,6 +4,8 @@ import { Trash2, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { WidgetRunner } from './WidgetRunner';
+import { resolveWidgetRemoteUrl } from '@/utils/resolveWidgetRemoteUrl';
 
 interface Props {
   widgets: WidgetDefinition[];
@@ -36,6 +38,7 @@ export function WidgetList({ widgets, onSelect, onDelete, readOnly = false }: Pr
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {widgets.map((widget) => {
         const statusInfo = STATUS_LABELS[widget.status] ?? STATUS_LABELS.draft;
+        const previewUrl = resolveWidgetRemoteUrl(widget.remoteUrl);
         return (
           <div
             key={widget.id}
@@ -44,11 +47,21 @@ export function WidgetList({ widgets, onSelect, onDelete, readOnly = false }: Pr
           >
             {/* Zone d'aperçu de l'image */}
             <div className="h-40 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center overflow-hidden">
-              <img 
-                src={widget.previewUrl || '/default-widget-preview.png'} 
-                alt={`Aperçu de ${widget.name}`} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-              />
+              {previewUrl ? (
+                <WidgetRunner
+                  widgetId={widget.id}
+                  remoteUrl={widget.remoteUrl!}
+                  name={widget.name}
+                  variant="thumbnail"
+                  className="w-full h-full"
+                />
+              ) : (
+                <img
+                  src={widget.previewUrl || '/default-widget-preview.png'}
+                  alt={`Aperçu de ${widget.name}`}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute top-3 right-3 flex gap-2">
                 <Badge className={`text-[10px] px-1.5 py-0 ${statusInfo.className}`}>
