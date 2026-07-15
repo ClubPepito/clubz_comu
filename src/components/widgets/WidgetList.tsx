@@ -58,7 +58,7 @@ export function WidgetList({ widgets, onSelect, onDelete, readOnly = false }: Pr
                 />
               ) : (
                 <img
-                  src={resolveImageUrl(widget.previewUrl) || widget.previewUrl || '/default-widget-preview.png'}
+                  src={resolveImageUrl(widget.previewUrl) || '/default-widget-preview.png'}
                   alt={`Aperçu de ${widget.name}`}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />

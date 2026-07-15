@@ -76,7 +76,7 @@ export default function MembershipRequests() {
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="size-11">
-                      <AvatarImage src={resolveImageUrl(request.user?.profileImage) || undefined} />
+                      <AvatarImage src={resolveImageUrl(request.user?.avatar) || undefined} />
                       <AvatarFallback className="bg-primary/10 font-semibold text-primary">
                         {request.user?.name?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>

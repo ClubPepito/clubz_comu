@@ -288,10 +288,10 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
               </div>
             )}
 
-            {(post.image || (post.images && post.images.length > 0)) && (
+            {(post.image || (post.images && post.images.length > 0)) && resolveImageUrl(post.image || post.images?.[0]) && (
               <div className="rounded-xl overflow-hidden mb-3 border border-border shadow-inner bg-muted">
                 <img 
-                  src={resolveImageUrl(post.image || post.images?.[0]) || post.image || post.images?.[0]} 
+                  src={resolveImageUrl(post.image || post.images?.[0])!} 
                   className="w-full h-auto object-cover max-h-[360px]" 
                   alt="Post content" 
                 />

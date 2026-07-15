@@ -274,8 +274,8 @@ const CommunitySettings = () => {
             >
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
                 <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-muted">
-                  {resolveImageUrl(community.logoUrl) ? (
-                    <img src={resolveImageUrl(community.logoUrl) || ""} alt="" className="size-full object-cover" />
+                  {resolveImageUrl(community.logo || community.logoUrl) ? (
+                    <img src={resolveImageUrl(community.logo || community.logoUrl) || ""} alt="" className="size-full object-cover" />
                   ) : (
                     <ImageIcon className="size-8 text-muted-foreground" />
                   )}

@@ -390,7 +390,7 @@ const CreateEvent = () => {
                   <div className="flex gap-4 items-start">
                     {formData.image ? (
                       <div className="relative w-24 h-24 rounded-xl overflow-hidden group">
-                        <img src={resolveImageUrl(formData.image) || formData.image} className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(formData.image) || ""} className="w-full h-full object-cover" />
                         <button onClick={() => setFormData({ ...formData, image: '' })} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Trash2 size={16} /></button>
                       </div>
                     ) : (
