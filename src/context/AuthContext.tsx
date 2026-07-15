@@ -11,6 +11,7 @@ interface User {
   username?: string;
 }
 
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
