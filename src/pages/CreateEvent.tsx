@@ -399,12 +399,20 @@ const CreateEvent = () => {
                         <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mt-2">Upload</span>
                         <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            try {
-                              const res = await storageService.upload(file);
-                              setFormData({ ...formData, image: res.data.url });
-                              toast.success('Image ajoutée');
-                            } catch (err) { toast.error('Erreur upload'); }
+                          if (!file) return;
+
+                          const previewUrl = URL.createObjectURL(file);
+                          setFormData((prev) => ({ ...prev, image: previewUrl }));
+
+                          try {
+                            const res = await storageService.upload(file);
+                            setFormData((prev) => ({ ...prev, image: res.data.url }));
+                            toast.success('Image ajoutée');
+                          } catch {
+                            setFormData((prev) => ({ ...prev, image: '' }));
+                            toast.error('Erreur upload');
+                          } finally {
+                            URL.revokeObjectURL(previewUrl);
                           }
                         }} />
                       </label>

@@ -208,6 +208,16 @@ const EventDetails = () => {
         <ArrowLeft size={14} /> Retour
       </Link>
 
+      {resolveImageUrl(event.image) && (
+        <div className="relative h-48 md:h-64 w-full overflow-hidden rounded-2xl border border-border shadow-klyb-sm">
+          <img
+            src={resolveImageUrl(event.image)!}
+            alt={event.title}
+            className="size-full object-cover"
+          />
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="flex items-center gap-4">
           <div className="relative">
