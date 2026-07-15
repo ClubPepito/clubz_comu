@@ -1,7 +1,5 @@
 import type { WidgetDefinition } from '@/types/widgetLibrary';
-import { Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { WidgetRunner } from './WidgetRunner';
 import { resolveWidgetRemoteUrl } from '@/utils/resolveWidgetRemoteUrl';
@@ -11,7 +9,7 @@ interface Props {
   onInstall: () => void;
 }
 
-export function MarketplaceItem({ widget, onInstall }: Props) {
+export function MarketplaceItem({ widget }: Props) {
   const previewUrl = resolveWidgetRemoteUrl(widget.remoteUrl);
 
   return (
@@ -59,14 +57,6 @@ export function MarketplaceItem({ widget, onInstall }: Props) {
               {widget.author?.username || widget.author?.name || 'Développeur'}
             </span>
           </div>
-          <Button
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); onInstall(); }}
-            className="font-bold flex items-center gap-1.5"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Ajouter
-          </Button>
         </div>
       </div>
     </div>

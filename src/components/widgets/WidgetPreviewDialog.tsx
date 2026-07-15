@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Download,
   Box,
   Layout,
   Tag,
@@ -104,7 +103,7 @@ function normalizePermissions(raw: WidgetDefinition['permissions']): Array<{ key
   });
 }
 
-export function WidgetPreviewDialog({ widget, open, onClose, onInstall }: Props) {
+export function WidgetPreviewDialog({ widget, open, onClose }: Props) {
   const [previewHeight, setPreviewHeight] = useState(320);
 
   useEffect(() => {
@@ -238,10 +237,6 @@ export function WidgetPreviewDialog({ widget, open, onClose, onInstall }: Props)
         <div className="flex flex-col-reverse gap-3 border-t border-border/60 bg-muted/20 px-8 py-5 sm:flex-row sm:items-center sm:justify-end">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Fermer
-          </Button>
-          <Button onClick={onInstall} className="gap-2 w-full sm:w-auto sm:min-w-[180px]">
-            <Download className="w-4 h-4" />
-            Installer dans ma communauté
           </Button>
         </div>
       </DialogContent>
