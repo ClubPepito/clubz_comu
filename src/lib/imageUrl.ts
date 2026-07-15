@@ -1,3 +1,5 @@
+import { getRuntimeEnv } from '@/lib/runtimeEnv';
+
 const STORAGE_PATH_REGEX = /\/storage\/([^/]+)\/(.+?)(\?.*)?$/;
 
 /** CDN R2 public en production (objets à la racine : images/xxx.jpg). */
@@ -5,12 +7,12 @@ const PRODUCTION_S3_PUBLIC_URL =
   "https://pub-647e664a4adc41af8da9d2eb040ae18a.r2.dev";
 
 function getS3PublicUrl(): string {
-  const configured = (import.meta.env?.VITE_S3_PUBLIC_URL || "").replace(
+  const configured = (getRuntimeEnv('VITE_S3_PUBLIC_URL') || "").replace(
     /\/$/,
     "",
   );
   if (configured) return configured;
-  if (import.meta.env?.VITE_ENV === "production") {
+  if (getRuntimeEnv('VITE_ENV') === "production") {
     return PRODUCTION_S3_PUBLIC_URL;
   }
   return "";
@@ -18,7 +20,7 @@ function getS3PublicUrl(): string {
 
 function getApiBaseUrl(): string {
   const configured = (
-    import.meta.env?.VITE_API_BASE_URL || "http://localhost:3000/api"
+    getRuntimeEnv('VITE_API_BASE_URL') || "http://localhost:3000/api"
   ).replace(/\/$/, "");
   return configured.endsWith("/api") ? configured : `${configured}/api`;
 }
