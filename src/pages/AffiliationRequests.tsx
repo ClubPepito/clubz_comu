@@ -8,6 +8,7 @@ import { SettingsSection } from "@/components/settings/SettingsSection"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { resolveImageUrl } from "@/lib/imageUrl"
 import {
   Empty,
   EmptyDescription,
@@ -76,7 +77,7 @@ export default function AffiliationRequests() {
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="size-11 rounded-lg">
-                      <AvatarImage src={request.logo} />
+                      <AvatarImage src={resolveImageUrl(request.logo) || undefined} />
                       <AvatarFallback className="rounded-lg bg-primary/10 font-semibold text-primary">
                         {request.name?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>

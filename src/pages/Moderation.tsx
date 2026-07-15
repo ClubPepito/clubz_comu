@@ -37,6 +37,7 @@ import { SearchField } from '@/components/layout/SearchField';
 import { FilterBar } from '@/components/layout/FilterBar';
 import { PageTabs, PageTabsList, PageTabsTrigger, PageTabsContent } from '@/components/layout/PageTabs';
 import { cn } from '@/lib/utils';
+import { resolveImageUrl } from '@/lib/imageUrl';
 
 
 
@@ -169,7 +170,7 @@ const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) 
           comments.map((comment) => (
             <div key={comment.id} className="flex gap-3">
               <Avatar className="h-8 w-8 rounded-full mt-0.5 border border-border">
-                <AvatarImage src={comment.author?.avatar} />
+                <AvatarImage src={resolveImageUrl(comment.author?.avatar) || undefined} />
                 <AvatarFallback className="bg-muted text-[10px] font-bold">
                   {(comment.author?.name || "U")[0]}
                 </AvatarFallback>
@@ -241,7 +242,7 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
           <div className="p-4 pb-3 flex items-start justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 rounded-full shadow-sm border border-border">
-                <AvatarImage src={post.author?.avatar || post.user?.avatar} />
+                <AvatarImage src={resolveImageUrl(post.author?.avatar || post.user?.avatar) || undefined} />
                 <AvatarFallback className="bg-primary/5 text-primary text-sm font-bold">
                   {(post.author?.name || post.user?.name || "T")[0]}
                 </AvatarFallback>
@@ -290,7 +291,7 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
             {(post.image || (post.images && post.images.length > 0)) && (
               <div className="rounded-xl overflow-hidden mb-3 border border-border shadow-inner bg-muted">
                 <img 
-                  src={post.image || post.images?.[0]} 
+                  src={resolveImageUrl(post.image || post.images?.[0]) || post.image || post.images?.[0]} 
                   className="w-full h-auto object-cover max-h-[360px]" 
                   alt="Post content" 
                 />
@@ -589,7 +590,7 @@ const Moderation = () => {
                         {report.type === 'user' && report.targetUser && (
                           <div className="flex items-center gap-2">
                             <Avatar className="h-7 w-7 rounded-full">
-                              <AvatarImage src={report.targetUser.avatar} />
+                              <AvatarImage src={resolveImageUrl(report.targetUser.avatar) || undefined} />
                               <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
                                 {report.targetUser.name?.[0]}
                               </AvatarFallback>

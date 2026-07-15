@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { resolveImageUrl } from "@/lib/imageUrl"
 
 const PERIOD_OPTIONS = [
   { value: "7", label: "7 jours" },
@@ -609,8 +610,8 @@ const Analytics = () => {
                   <div className="flex min-w-0 items-center gap-4">
                     <div className="w-6 text-sm font-bold text-primary/30">#{i + 1}</div>
                     <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10">
-                      {event.image ? (
-                        <img src={event.image} alt="" className="size-full object-cover" />
+                      {resolveImageUrl(event.image) ? (
+                        <img src={resolveImageUrl(event.image) || ""} alt="" className="size-full object-cover" />
                       ) : (
                         <CalendarIcon className="text-primary/40" />
                       )}
@@ -681,7 +682,7 @@ const Analytics = () => {
                   <div className="flex items-center gap-3">
                     <Avatar className="size-8">
                       {activity.user?.avatar && (
-                        <AvatarImage src={activity.user.avatar} />
+                        <AvatarImage src={resolveImageUrl(activity.user.avatar) || undefined} />
                       )}
                       <AvatarFallback className="text-[10px]">
                         {(activity.user?.name || "U").substring(0, 2).toUpperCase()}

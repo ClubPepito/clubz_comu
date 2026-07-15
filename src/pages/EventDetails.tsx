@@ -45,6 +45,7 @@ import { CheckInScanner } from '@/components/events/CheckInScanner'
 import { PromoCodeManager } from '@/components/events/PromoCodeManager'
 import { toast } from 'sonner'
 import type { Event, EventAnalytics } from '@/types/event'
+import { resolveImageUrl } from '@/lib/imageUrl'
 
 const EventDetails = () => {
   const { id } = useParams()
@@ -211,7 +212,7 @@ const EventDetails = () => {
         <div className="flex items-center gap-4">
           <div className="relative">
             <Avatar className="h-16 w-16 rounded-2xl border border-border shadow-sm">
-              <AvatarImage src={event.image} className="object-cover" />
+              <AvatarImage src={resolveImageUrl(event.image) || undefined} className="object-cover" />
               <AvatarFallback>EV</AvatarFallback>
             </Avatar>
             <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 bg-success rounded-lg border-2 border-white flex items-center justify-center shadow-sm">
@@ -550,7 +551,7 @@ const EventDetails = () => {
                         <TableCell className="px-5 py-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8 rounded-lg border border-border shadow-sm shrink-0">
-                              {a.user?.avatar && <AvatarImage src={a.user.avatar} />}
+                              {a.user?.avatar && <AvatarImage src={resolveImageUrl(a.user.avatar) || undefined} />}
                               <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">
                                 {(a.user?.name || 'U').substring(0, 2).toUpperCase()}
                               </AvatarFallback>

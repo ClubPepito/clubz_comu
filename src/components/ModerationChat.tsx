@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { resolveImageUrl } from '@/lib/imageUrl';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -379,7 +380,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
                     <div className="w-12 flex-shrink-0 flex justify-center">
                       {showAvatar ? (
                         <Avatar className="h-12 w-12 rounded-2xl border-2 border-background shadow-lg group-hover:scale-105 transition-transform">
-                          <AvatarImage src={message.sender?.avatar} />
+                          <AvatarImage src={resolveImageUrl(message.sender?.avatar) || undefined} />
                           <AvatarFallback className="bg-primary/5 text-primary text-xs font-black uppercase tracking-tighter">
                             {message.sender?.name?.[0] || <User size={16} />}
                           </AvatarFallback>

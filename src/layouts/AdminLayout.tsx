@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
 import { APP_NAME } from "@/constants/app"
 import { NAV_GROUPS, type NavItem } from "@/constants/navigation"
+import { resolveImageUrl } from "@/lib/imageUrl"
 import { useAuth } from "@/context/AuthContext"
 import { useCommunity } from "@/context/CommunityContext"
 import { cn } from "@/lib/utils"
@@ -127,7 +128,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     pendingAffiliationRequestsCount,
   } = useCommunity()
 
-  const avatarUrl = user?.avatar?.trim() ? user.avatar : null
+  const avatarUrl = resolveImageUrl(user?.avatar)
   const userInitials = getInitials(user?.name || user?.username || user?.email)
   const displayName = user?.name || user?.username || user?.email || "Utilisateur"
 

@@ -50,6 +50,7 @@ import { PageLoader } from "@/components/layout/PageLoader"
 import { CommunityGate } from "@/components/layout/CommunityGate"
 import { toast } from "sonner"
 import type { Event } from "@/types/event"
+import { resolveImageUrl } from "@/lib/imageUrl"
 
 type StatusFilter = "all" | "upcoming" | "past" | "published" | "draft"
 
@@ -226,7 +227,7 @@ const Events = () => {
                   <div className="relative aspect-square overflow-hidden">
                     <img
                       src={
-                        event.image ||
+                        resolveImageUrl(event.image) ||
                         "https://images.unsplash.com/photo-1574169208507-84376144848b?w=400&auto=format&fit=crop&q=60"
                       }
                       alt={event.title}
@@ -315,7 +316,7 @@ const Events = () => {
                           <div className="flex -space-x-2">
                             {(event.recentAttendees || []).slice(0, 3).map((a, i) => (
                               <Avatar key={i} className="size-7 border-2 border-card">
-                                <AvatarImage src={a.avatar || undefined} />
+                                <AvatarImage src={resolveImageUrl(a.avatar) || undefined} />
                                 <AvatarFallback className="text-[10px]">
                                   {(a.name || "U").substring(0, 1).toUpperCase()}
                                 </AvatarFallback>

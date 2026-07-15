@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { resolveImageUrl } from "@/lib/imageUrl"
 import {
   Table,
   TableBody,
@@ -173,7 +174,7 @@ const Members = () => {
                     <TableCell className="px-6">
                       <div className="flex items-center gap-3">
                         <Avatar className="size-8 rounded-lg">
-                          <AvatarImage src={m.user?.profileImage} />
+                          <AvatarImage src={resolveImageUrl(m.user?.profileImage) || undefined} />
                           <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                             {m.user?.name?.substring(0, 2).toUpperCase()}
                           </AvatarFallback>

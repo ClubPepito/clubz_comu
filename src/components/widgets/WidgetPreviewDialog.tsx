@@ -25,6 +25,7 @@ import {
 import type { WidgetDefinition, WidgetPermission } from '@/types/widgetLibrary';
 import { WidgetRunner } from './WidgetRunner';
 import { resolveWidgetRemoteUrl } from '@/utils/resolveWidgetRemoteUrl';
+import { resolveImageUrl } from '@/lib/imageUrl';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -141,7 +142,7 @@ export function WidgetPreviewDialog({ widget, open, onClose }: Props) {
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Avatar className="w-5 h-5">
-                  <AvatarImage src={widget.author?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authorSeed}`} />
+                  <AvatarImage src={resolveImageUrl(widget.author?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authorSeed}`} />
                   <AvatarFallback className="text-[9px]">{authorName.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <span className="font-medium">{authorName}</span>

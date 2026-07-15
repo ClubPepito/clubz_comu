@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select"
 import { KLYB_COLORS } from "@/constants/colors"
 import { cn } from "@/lib/utils"
+import { resolveImageUrl } from "@/lib/imageUrl"
 
 const NAV_ITEMS: { id: SettingsTab; label: string; description: string; icon: typeof UserCircle }[] = [
   { id: "profile", label: "Informations", description: "Nom et description", icon: UserCircle },
@@ -273,8 +274,8 @@ const CommunitySettings = () => {
             >
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
                 <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-muted">
-                  {community.logoUrl ? (
-                    <img src={community.logoUrl} alt="" className="size-full object-cover" />
+                  {resolveImageUrl(community.logoUrl) ? (
+                    <img src={resolveImageUrl(community.logoUrl) || ""} alt="" className="size-full object-cover" />
                   ) : (
                     <ImageIcon className="size-8 text-muted-foreground" />
                   )}

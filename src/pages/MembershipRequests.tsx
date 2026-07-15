@@ -8,6 +8,7 @@ import { SettingsSection } from "@/components/settings/SettingsSection"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { resolveImageUrl } from "@/lib/imageUrl"
 import {
   Empty,
   EmptyDescription,
@@ -75,7 +76,7 @@ export default function MembershipRequests() {
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="size-11">
-                      <AvatarImage src={request.user?.profileImage} />
+                      <AvatarImage src={resolveImageUrl(request.user?.profileImage) || undefined} />
                       <AvatarFallback className="bg-primary/10 font-semibold text-primary">
                         {request.user?.name?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>

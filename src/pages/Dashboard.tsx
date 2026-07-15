@@ -26,6 +26,7 @@ import { StatCard } from "@/components/layout/StatCard"
 import { PageLoader } from "@/components/layout/PageLoader"
 import { useCommunity } from "@/context/CommunityContext"
 import { eventService } from "@/services/api"
+import { resolveImageUrl } from "@/lib/imageUrl"
 
 const Dashboard = () => {
   const { selectedCommunityId } = useCommunity()
@@ -162,7 +163,7 @@ const Dashboard = () => {
                       <div className="size-16 shrink-0 overflow-hidden rounded-xl shadow-klyb-sm">
                         <img
                           src={
-                            event.image ||
+                            resolveImageUrl(event.image) ||
                             "https://images.unsplash.com/photo-1574169208507-84376144848b?w=400&auto=format&fit=crop&q=60"
                           }
                           alt={event.title}

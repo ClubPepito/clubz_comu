@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { WidgetRunner } from './WidgetRunner';
 import { resolveWidgetRemoteUrl } from '@/utils/resolveWidgetRemoteUrl';
+import { resolveImageUrl } from '@/lib/imageUrl';
 
 interface Props {
   widgets: WidgetDefinition[];
@@ -57,7 +58,7 @@ export function WidgetList({ widgets, onSelect, onDelete, readOnly = false }: Pr
                 />
               ) : (
                 <img
-                  src={widget.previewUrl || '/default-widget-preview.png'}
+                  src={resolveImageUrl(widget.previewUrl) || widget.previewUrl || '/default-widget-preview.png'}
                   alt={`Aperçu de ${widget.name}`}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
@@ -84,7 +85,7 @@ export function WidgetList({ widgets, onSelect, onDelete, readOnly = false }: Pr
               <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
                 <div className="flex items-center gap-2">
                   <Avatar className="w-6 h-6">
-                    <AvatarImage src={widget.author?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${widget.author?.username || widget.authorId}`} />
+                    <AvatarImage src={resolveImageUrl(widget.author?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${widget.author?.username || widget.authorId}`} />
                     <AvatarFallback>{widget.author?.username?.charAt(0)?.toUpperCase() || 'D'}</AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-semibold text-muted-foreground truncate max-w-[100px]">
