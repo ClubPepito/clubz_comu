@@ -5,10 +5,8 @@ import {
   MessageSquare, 
   Trash2, 
   MoreVertical, 
-  Filter, 
   Loader2,
   Heart,
-  Send,
   X,
   MessageCircle,
   MapPin,
@@ -202,22 +200,10 @@ const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) 
                 <MessageCircle />
               </EmptyMedia>
               <EmptyTitle>Aucun commentaire</EmptyTitle>
-              <EmptyDescription>Soyez le premier à répondre à ce post.</EmptyDescription>
+              <EmptyDescription>Aucun commentaire sur ce post.</EmptyDescription>
             </EmptyHeader>
           </Empty>
         )}
-      </div>
-
-      <div className="p-4 border-t border-border bg-muted/30">
-        <div className="relative">
-          <textarea 
-            placeholder="Écrire un commentaire..."
-            className="w-full bg-card border border-border rounded-xl p-3 pr-10 text-[11px] font-medium outline-none resize-none min-h-[40px] shadow-sm focus:border-primary/30 transition-colors"
-          />
-          <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-primary hover:scale-110 transition-transform">
-            <Send size={16} />
-          </button>
-        </div>
       </div>
     </motion.div>
   );
@@ -280,9 +266,6 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
                     onClick={() => onDelete(post.id)}
                   >
                     <Trash2 size={14} /> Supprimer
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-muted-foreground hover:bg-muted rounded-lg cursor-pointer outline-none">
-                    <ShieldAlert size={14} /> Modérer
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenuPortal>
@@ -364,6 +347,7 @@ const Moderation = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [reportsFilter, setReportsFilter] = useState<'all' | 'pending' | 'resolved' | 'dismissed'>('pending');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => { 
     if (selectedCommunityId) {
@@ -407,7 +391,7 @@ const Moderation = () => {
       kicked: 'Exclure cet utilisateur de la communauté ?',
       muted: 'Rendre cet utilisateur muet dans la communauté ?'
     }[action];
-    
+
     if (!confirm(confirmMessage)) return;
 
     try {
@@ -434,12 +418,29 @@ const Moderation = () => {
 
   const [selectedPostForComments, setSelectedPostForComments] = useState<any | null>(null);
 
+  const searchLower = searchTerm.trim().toLowerCase();
+
+  const filteredPosts = useMemo(() => {
+    if (!searchLower) return posts;
+    return posts.filter((p) => {
+      const content = (p.content || '').toLowerCase();
+      const author = (p.author?.name || p.user?.name || '').toLowerCase();
+      return content.includes(searchLower) || author.includes(searchLower);
+    });
+  }, [posts, searchLower]);
+
   const filteredReports = reports.filter(r => {
-    if (reportsFilter === 'all') return true;
-    if (reportsFilter === 'pending') return r.status === 'pending';
-    if (reportsFilter === 'resolved') return r.status === 'resolved';
-    if (reportsFilter === 'dismissed') return r.status === 'dismissed';
-    return true;
+    const statusMatch =
+      reportsFilter === 'all' ||
+      (reportsFilter === 'pending' && r.status === 'pending') ||
+      (reportsFilter === 'resolved' && r.status === 'resolved') ||
+      (reportsFilter === 'dismissed' && r.status === 'dismissed');
+    if (!statusMatch) return false;
+    if (!searchLower) return true;
+    const reason = (r.reason || r.note || '').toLowerCase();
+    const reporter = (r.reporter?.name || r.user?.name || '').toLowerCase();
+    const content = (r.targetPost?.content || r.targetComment?.content || '').toLowerCase();
+    return reason.includes(searchLower) || reporter.includes(searchLower) || content.includes(searchLower);
   });
 
   const reportCounts = useMemo(() => ({
@@ -464,18 +465,17 @@ const Moderation = () => {
         title="Modération & Social"
         description="Contrôle et animation du contenu communautaire"
         actions={
-          <>
-            <SearchField placeholder="Rechercher…" containerClassName="sm:w-48" />
-            <Button variant="outline" size="sm">
-              <Filter data-icon="inline-start" />
-              Filtre
-            </Button>
-          </>
+          <SearchField
+            placeholder="Rechercher…"
+            containerClassName="sm:w-48"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         }
         meta={
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <ShieldAlert className="size-3.5 text-primary" />
-            {posts.length} post{posts.length !== 1 ? 's' : ''} · {reportCounts.pending} signalement{reportCounts.pending !== 1 ? 's' : ''} en attente
+            {filteredPosts.length} post{filteredPosts.length !== 1 ? 's' : ''} · {reportCounts.pending} signalement{reportCounts.pending !== 1 ? 's' : ''} en attente
           </p>
         }
       />
@@ -491,7 +491,7 @@ const Moderation = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8 space-y-4">
               <AnimatePresence mode="popLayout">
-                {posts.length > 0 ? posts.map((post) => (
+                {filteredPosts.length > 0 ? filteredPosts.map((post) => (
                   <PostCard key={post.id} post={post} onDelete={handleDeletePost} onCommentClick={(p) => setSelectedPostForComments(p)} />
                 )) : (
                   <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
@@ -499,9 +499,13 @@ const Moderation = () => {
                       <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-muted text-muted-foreground [&_svg]:size-5">
                         <MessageSquare />
                       </EmptyMedia>
-                      <EmptyTitle className="text-base">Aucun post à modérer</EmptyTitle>
+                      <EmptyTitle className="text-base">
+                        {searchTerm ? 'Aucun résultat' : 'Aucun post à modérer'}
+                      </EmptyTitle>
                       <EmptyDescription>
-                        Le flux social de cette communauté est vide pour le moment.
+                        {searchTerm
+                          ? 'Aucun post ne correspond à votre recherche.'
+                          : 'Le flux social de cette communauté est vide pour le moment.'}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>
@@ -517,7 +521,7 @@ const Moderation = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-foreground">Vue d'ensemble</h3>
-                    <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statistiques de la semaine</p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modération en cours</p>
                   </div>
                   <div className="space-y-3">
                     <div className="rounded-2xl border border-border/80 bg-muted/50 p-4 shadow-klyb-sm">
@@ -525,13 +529,10 @@ const Moderation = () => {
                       <p className="text-2xl font-bold tabular-nums text-foreground">{posts.length}</p>
                     </div>
                     <div className="rounded-2xl border border-border/80 bg-muted/50 p-4 shadow-klyb-sm">
-                      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Croissance</p>
-                      <p className="text-2xl font-bold tabular-nums text-primary">+12.5%</p>
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Signalements en attente</p>
+                      <p className="text-2xl font-bold tabular-nums text-primary">{reportCounts.pending}</p>
                     </div>
                   </div>
-                  <Button variant="outline" className="h-11 w-full rounded-xl border-border text-xs font-semibold uppercase tracking-wider text-muted-foreground shadow-sm hover:bg-muted">
-                    Télécharger le rapport
-                  </Button>
                 </div>
               </Card>
             </div>

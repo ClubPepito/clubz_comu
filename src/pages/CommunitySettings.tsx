@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
   UserCircle,
   Lock,
@@ -8,6 +8,7 @@ import {
   X,
   ExternalLink,
   Image as ImageIcon,
+  Loader2,
 } from "lucide-react"
 import { useCommunity } from "@/context/CommunityContext"
 import { useCommunitySettings, type SettingsTab } from "@/hooks/useCommunitySettings"
@@ -30,6 +31,8 @@ import {
 import { KLYB_COLORS } from "@/constants/colors"
 import { cn } from "@/lib/utils"
 import { resolveImageUrl } from "@/lib/imageUrl"
+import { storageService, communityService } from "@/services/api"
+import { toast } from "sonner"
 
 const NAV_ITEMS: { id: SettingsTab; label: string; description: string; icon: typeof UserCircle }[] = [
   { id: "profile", label: "Informations", description: "Nom et description", icon: UserCircle },
@@ -50,9 +53,11 @@ function SaveFooter({ saving, onSave }: { saving: boolean; onSave: () => void })
 }
 
 const CommunitySettings = () => {
-  const { selectedCommunityId, selectedCommunity } = useCommunity()
+  const { selectedCommunityId, selectedCommunity, refreshCommunities } = useCommunity()
   const [tab, setTab] = useState<SettingsTab>("profile")
   const [domainInput, setDomainInput] = useState("")
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   const {
     loading,
@@ -81,6 +86,47 @@ const CommunitySettings = () => {
     addDomain,
     removeDomain,
   } = useCommunitySettings(selectedCommunityId)
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file || !selectedCommunityId || !community) return
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choisissez une image (PNG, JPG, SVG…)")
+      return
+    }
+
+    try {
+      setUploadingLogo(true)
+      const res = await storageService.upload(file)
+      const url = res.data?.url
+      if (!url) throw new Error("URL manquante")
+
+      const next = { ...community, logo: url }
+      setCommunity(next)
+      await communityService.update(selectedCommunityId, {
+        name: next.name,
+        description: next.description,
+        isPublic: next.accessType === "public",
+        accessType: next.accessType,
+        price: next.accessType === "paid" ? parseFloat(next.price) || 0 : null,
+        paymentType: next.accessType === "paid" ? next.paymentType : null,
+        logo: url,
+        primaryColor: next.primaryColor,
+        secondaryColor: next.secondaryColor,
+        category: next.category,
+        allowedDomains: next.accessType === "private" ? next.allowedDomains || [] : [],
+        tags: next.tags?.map((t: any) => (typeof t === "string" ? t : t.name)) || [],
+      })
+      await refreshCommunities()
+      toast.success("Logo mis à jour")
+    } catch {
+      toast.error("Échec de l'upload du logo")
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
 
   if (loading || !community) {
     return (
@@ -285,8 +331,23 @@ const CommunitySettings = () => {
                   hint="PNG ou SVG recommandé, 512×512 px."
                   className="flex-1"
                 >
-                  <Button variant="outline" size="sm" disabled>
-                    Changer le logo (bientôt)
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoChange}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingLogo}
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    {uploadingLogo ? (
+                      <Loader2 className="size-4 animate-spin" data-icon="inline-start" />
+                    ) : null}
+                    {uploadingLogo ? "Upload…" : "Changer le logo"}
                   </Button>
                 </SettingsField>
               </div>

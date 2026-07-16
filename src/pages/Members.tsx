@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Search, MoreVertical, Calendar, UserPlus } from "lucide-react"
+import { Search, MoreVertical, Calendar, UserPlus, Link2, Copy, Plus } from "lucide-react"
 import { communityService } from "@/services/api"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { PageLoader } from "@/components/layout/PageLoader"
 import { AtmosphericHeader } from "@/components/layout/AtmosphericHeader"
 import { CommunityGate } from "@/components/layout/CommunityGate"
@@ -36,25 +44,46 @@ import { Users as UsersIcon } from "lucide-react"
 import { StatCard } from "@/components/layout/StatCard"
 import { toast } from "sonner"
 import { useCommunity } from "@/context/CommunityContext"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+
+type InviteLink = {
+  id: string
+  code: string
+  requiresApproval: boolean
+  maxUses: number | null
+  useCount: number
+  expiresAt: string | null
+  createdAt: string
+}
+
+const INVITE_BASE = "https://app.klyb.app/join?code="
 
 const Members = () => {
   const { selectedCommunityId, selectedCommunity, pendingRequestsCount } = useCommunity()
   const [members, setMembers] = useState<any[]>([])
   const [roles, setRoles] = useState<any[]>([])
+  const [invites, setInvites] = useState<InviteLink[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [creatingInvite, setCreatingInvite] = useState(false)
+  const [requiresApproval, setRequiresApproval] = useState(false)
+  const [maxUses, setMaxUses] = useState("")
 
   useEffect(() => {
     const fetchData = async () => {
       if (!selectedCommunityId) return
       try {
         setLoading(true)
-        const [membersRes, rolesRes] = await Promise.all([
+        const [membersRes, rolesRes, invitesRes] = await Promise.all([
           communityService.getMembers(selectedCommunityId),
           communityService.getRoles(selectedCommunityId),
+          communityService.getInviteLinks(selectedCommunityId).catch(() => ({ data: [] })),
         ])
         setMembers(membersRes.data || [])
         setRoles(rolesRes.data || [])
+        setInvites(invitesRes.data || [])
       } catch (err) {
         console.error("Failed to fetch members or roles", err)
         toast.error("Erreur lors du chargement des données")
@@ -92,6 +121,37 @@ const Members = () => {
     }
   }
 
+  const handleCreateInvite = async () => {
+    if (!selectedCommunityId) return
+    try {
+      setCreatingInvite(true)
+      const parsedMax = maxUses.trim() ? parseInt(maxUses, 10) : undefined
+      const res = await communityService.createInviteLink(selectedCommunityId, {
+        requiresApproval,
+        maxUses: parsedMax && !Number.isNaN(parsedMax) ? parsedMax : undefined,
+      })
+      setInvites((prev) => [res.data, ...prev])
+      setInviteOpen(false)
+      setRequiresApproval(false)
+      setMaxUses("")
+      toast.success("Lien d'invitation créé")
+    } catch {
+      toast.error("Impossible de créer le lien (permission manage_members requise)")
+    } finally {
+      setCreatingInvite(false)
+    }
+  }
+
+  const copyInvite = async (code: string) => {
+    const url = `${INVITE_BASE}${code}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success("Lien copié")
+    } catch {
+      toast.error("Copie impossible")
+    }
+  }
+
   const filteredMembers = members.filter(
     (m) =>
       m.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,14 +177,20 @@ const Members = () => {
             : "Gérez les rôles et les accès"
         }
         actions={
-          pendingRequestsCount > 0 ? (
-            <Link to="/membership">
-              <Button variant="outline" size="sm">
-                <UserPlus data-icon="inline-start" />
-                {pendingRequestsCount} adhésion{pendingRequestsCount > 1 ? "s" : ""} en attente
-              </Button>
-            </Link>
-          ) : undefined
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+              <Link2 data-icon="inline-start" />
+              Lien d'invitation
+            </Button>
+            {pendingRequestsCount > 0 ? (
+              <Link to="/membership">
+                <Button variant="outline" size="sm">
+                  <UserPlus data-icon="inline-start" />
+                  {pendingRequestsCount} adhésion{pendingRequestsCount > 1 ? "s" : ""} en attente
+                </Button>
+              </Link>
+            ) : null}
+          </div>
         }
       />
 
@@ -137,6 +203,39 @@ const Members = () => {
           loading={loading}
         />
       </div>
+
+      {invites.length > 0 && (
+        <Card className="border-border/80 shadow-klyb-sm">
+          <CardHeader className="border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent">
+            <CardTitle>Liens d'invitation</CardTitle>
+            <CardDescription>Partagez un code pour rejoindre la communauté</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 p-4">
+            {invites.map((invite) => (
+              <div
+                key={invite.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/80 bg-muted/30 px-4 py-3"
+              >
+                <div className="min-w-0 flex flex-col gap-1">
+                  <p className="truncate font-mono text-sm font-medium">{invite.code}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {invite.useCount}
+                    {invite.maxUses != null ? ` / ${invite.maxUses}` : ""} utilisations
+                    {invite.requiresApproval ? " · validation requise" : ""}
+                    {invite.expiresAt
+                      ? ` · expire le ${new Date(invite.expiresAt).toLocaleDateString()}`
+                      : ""}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => copyInvite(invite.code)}>
+                  <Copy data-icon="inline-start" />
+                  Copier
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-border/80 shadow-klyb-sm">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent">
@@ -243,6 +342,47 @@ const Members = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Créer un lien d'invitation</DialogTitle>
+            <DialogDescription>
+              Les membres rejoignent via app.klyb.app avec ce code.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="requires-approval">Validation manuelle</Label>
+              <Switch
+                id="requires-approval"
+                checked={requiresApproval}
+                onCheckedChange={setRequiresApproval}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="max-uses">Utilisations max (optionnel)</Label>
+              <Input
+                id="max-uses"
+                type="number"
+                min={1}
+                placeholder="Illimité"
+                value={maxUses}
+                onChange={(e) => setMaxUses(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleCreateInvite} disabled={creatingInvite}>
+              <Plus data-icon="inline-start" />
+              {creatingInvite ? "Création…" : "Créer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
     </CommunityGate>
   )

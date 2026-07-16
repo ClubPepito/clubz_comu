@@ -191,23 +191,23 @@ export const communityService = {
     api.get(`/communities/${communityId}/parent-requests`),
   respondToParentRequest: (communityId: string, childId: string, action: 'accept' | 'reject') =>
     api.post(`/communities/${communityId}/parent-requests/${childId}/${action}`),
-  inviteMember: (communityId: string, userId: string) =>
-    api.post(`/communities/${communityId}/invite`, { userId }),
   kickMember: (communityId: string, userId: string) =>
     api.delete(`/communities/${communityId}/members/${userId}`),
   removeMember: (communityId: string, userId: string) =>
     api.delete(`/communities/${communityId}/members/${userId}`),
 
+  // Invite links
+  getInviteLinks: (communityId: string) =>
+    api.get(`/communities/${communityId}/invites`),
+  createInviteLink: (
+    communityId: string,
+    data: { requiresApproval?: boolean; maxUses?: number; expiresAt?: string }
+  ) => api.post(`/communities/${communityId}/invites`, data),
+
   // Roles & Permissions
   getRoles: (communityId: string) => api.get(`/communities/${communityId}/roles`),
   updateMemberRole: (communityId: string, userId: string, roleId: string) =>
     api.post(`/communities/${communityId}/roles/assign`, { userId, roleId }),
-  getMyRole: (communityId: string) => api.get(`/communities/${communityId}/my-role`),
-
-  // Widgets
-  getWidgets: (communityId: string) => api.get(`/widget-library/community/${communityId}`),
-  toggleWidget: (widgetId: string, enabled: boolean) =>
-    api.patch(`/widget-library/${widgetId}`, { enabled }),
 };
 
 export const postService = {
@@ -215,21 +215,10 @@ export const postService = {
   getOne: (id: string) => api.get(`/posts/${id}`),
   create: (data: any) => api.post('/posts', data),
   delete: (id: string) => api.delete(`/posts/${id}`),
-  like: (id: string) => api.post(`/posts/${id}/like`),
 };
 
 export const commentService = {
   getByPost: (postId: string) => api.get(`/posts/${postId}/comments`),
-  delete: (postId: string, commentId: string) => api.delete(`/posts/${postId}/comments/${commentId}`),
-};
-
-export const roomService = {
-  getAll: (communityId?: string | null) =>
-    api.get('/rooms', { params: communityId ? { communityId } : {} }),
-  getOne: (id: string) => api.get(`/rooms/${id}`),
-  create: (data: any) => api.post('/rooms', data),
-  join: (id: string) => api.post(`/rooms/${id}/join`),
-  getMembers: (id: string) => api.get(`/rooms/${id}/members`),
 };
 
 export const chatService = {
@@ -328,27 +317,6 @@ export const widgetInstallationService = {
   /** Widgets installés dans une communauté */
   getByCommunity: (communityId: string) =>
     api.get(`/widget-installations/community/${communityId}`),
-};
-
-// ============================================
-// Pages (Page Builder)
-// ============================================
-export const pageService = {
-  /** Pages de la communauté */
-  getByCommunity: (communityId: string, status?: 'draft' | 'published') =>
-    api.get(`/pages/community/${communityId}`, { params: status ? { status } : {} }),
-  /** Une page */
-  getOne: (id: string) => api.get(`/pages/${id}`),
-  /** Créer une page */
-  create: (data: { name: string; layout: any; status?: 'draft' | 'published'; communityId?: string }) =>
-    api.post('/pages', data),
-  /** Mettre à jour une page */
-  update: (id: string, data: any) => api.patch(`/pages/${id}`, data),
-  /** Supprimer une page */
-  delete: (id: string) => api.delete(`/pages/${id}`),
-  /** Page publiée d'une communauté */
-  getPublished: (communityId: string) =>
-    api.get(`/pages/community/${communityId}/published`),
 };
 
 // ============================================

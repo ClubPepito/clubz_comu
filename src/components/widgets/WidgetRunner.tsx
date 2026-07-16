@@ -1,6 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { useCommunity } from '@/context/CommunityContext';
 import { resolveWidgetRemoteUrl } from '@/utils/resolveWidgetRemoteUrl';
 import { cn } from '@/lib/utils';
 
@@ -13,14 +14,24 @@ const THUMBNAIL_SCALED = {
 };
 
 const DEFAULT_PREVIEW_THEME = {
-  primary: '#6366f1',
-  primaryLight: '#818cf8',
+  primary: '#2A7B9B',
+  primaryLight: '#3d9bb8',
   background: '#0f172a',
   surface: '#1e293b',
   textPrimary: '#f8fafc',
   textSecondary: '#94a3b8',
   border: '#334155',
 };
+
+function lightenHex(hex: string, amount = 0.2): string {
+  const raw = hex.replace('#', '');
+  if (raw.length !== 6) return hex;
+  const num = parseInt(raw, 16);
+  const r = Math.min(255, ((num >> 16) & 0xff) + Math.round(255 * amount));
+  const g = Math.min(255, ((num >> 8) & 0xff) + Math.round(255 * amount));
+  const b = Math.min(255, (num & 0xff) + Math.round(255 * amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
 
 interface WidgetRunnerProps {
   widgetId: string;
@@ -45,9 +56,21 @@ export function WidgetRunner({
 }: WidgetRunnerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { user } = useAuth();
+  const { selectedCommunity } = useCommunity();
   const configRef = useRef({ config, env });
   configRef.current = { config, env };
   const resolvedRemoteUrl = useMemo(() => resolveWidgetRemoteUrl(remoteUrl), [remoteUrl]);
+
+  const previewTheme = useMemo(() => {
+    const primary = selectedCommunity?.primaryColor || DEFAULT_PREVIEW_THEME.primary;
+    return {
+      ...DEFAULT_PREVIEW_THEME,
+      primary,
+      primaryLight: lightenHex(primary),
+    };
+  }, [selectedCommunity?.primaryColor]);
+  const themeRef = useRef(previewTheme);
+  themeRef.current = previewTheme;
 
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
@@ -101,7 +124,7 @@ export function WidgetRunner({
             responseData = {
               env: configRef.current.env || {},
               props: configRef.current.config || {},
-              theme: DEFAULT_PREVIEW_THEME,
+              theme: themeRef.current,
             };
             break;
 
