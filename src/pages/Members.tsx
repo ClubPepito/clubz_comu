@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Search, Filter, MoreVertical, Calendar, UserPlus } from "lucide-react"
+import { Search, MoreVertical, Calendar, UserPlus } from "lucide-react"
 import { communityService } from "@/services/api"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,11 +22,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PageHeader } from "@/components/layout/PageHeader"
-import { StatCard } from "@/components/layout/StatCard"
 import { PageLoader } from "@/components/layout/PageLoader"
+import { AtmosphericHeader } from "@/components/layout/AtmosphericHeader"
 import { CommunityGate } from "@/components/layout/CommunityGate"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Users as UsersIcon } from "lucide-react"
+import { StatCard } from "@/components/layout/StatCard"
 import { toast } from "sonner"
 import { useCommunity } from "@/context/CommunityContext"
 
@@ -101,8 +108,8 @@ const Members = () => {
       title="Membres"
       description="Sélectionnez une communauté pour voir et gérer ses membres."
     >
-    <div className="flex flex-col gap-8 pb-10">
-      <PageHeader
+    <div className="flex flex-col gap-8 pb-12">
+      <AtmosphericHeader
         title="Membres"
         description={
           selectedCommunity
@@ -131,33 +138,41 @@ const Members = () => {
         />
       </div>
 
-      <Card className="shadow-klyb-sm">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
+      <Card className="border-border/80 shadow-klyb-sm">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent">
           <div>
             <CardTitle>Membres</CardTitle>
             <CardDescription>Visualisation des accès</CardDescription>
           </div>
-          <div className="flex gap-2">
-            <div className="relative">
-              <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher…"
-                className="w-48 pl-9 sm:w-64"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter data-icon="inline-start" />
-              Filtre
-            </Button>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher…"
+              className="h-11 w-48 rounded-xl border-border/80 pl-9 sm:w-64"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <PageLoader className="min-h-[200px]" />
           ) : filteredMembers.length === 0 ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">Aucun membre.</p>
+            <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <UsersIcon />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {searchTerm ? "Aucun résultat" : "Aucun membre"}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {searchTerm
+                    ? "Aucun membre ne correspond à votre recherche."
+                    : "Les membres de votre communauté apparaîtront ici."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>

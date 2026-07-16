@@ -11,14 +11,14 @@ interface SettingsSectionProps {
 
 export function SettingsSection({ title, description, children, footer, className }: SettingsSectionProps) {
   return (
-    <Card className={cn("shadow-klyb-sm", className)}>
-      <CardHeader>
+    <Card className={cn("overflow-hidden border-border/80 shadow-klyb-sm", className)}>
+      <CardHeader className="border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent">
         <CardTitle className="text-base">{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
-      <CardContent className="flex flex-col gap-6">{children}</CardContent>
+      <CardContent className="flex flex-col gap-6 pt-6">{children}</CardContent>
       {footer && (
-        <CardFooter className="border-t border-border bg-muted/30">{footer}</CardFooter>
+        <CardFooter className="border-t border-border/60 bg-muted/20">{footer}</CardFooter>
       )}
     </Card>
   )

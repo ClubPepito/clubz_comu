@@ -16,6 +16,7 @@ import { NAV_GROUPS, type NavItem } from "@/constants/navigation"
 import { resolveImageUrl } from "@/lib/imageUrl"
 import { useAuth } from "@/context/AuthContext"
 import { useCommunity } from "@/context/CommunityContext"
+import { NoCommunitiesPage } from "@/components/layout/NoCommunitiesPage"
 import { cn } from "@/lib/utils"
 
 function SidebarLink({
@@ -118,7 +119,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
-  const { user, logout } = useAuth()
+  const { user, token, logout } = useAuth()
   const {
     communities,
     selectedCommunityId,
@@ -126,6 +127,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     loading,
     pendingRequestsCount,
     pendingAffiliationRequestsCount,
+    refreshCommunities,
   } = useCommunity()
 
   const avatarUrl = resolveImageUrl(user?.avatar)
@@ -135,6 +137,31 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   if (location.pathname === "/login" || location.pathname === "/cli-auth") {
     return <>{children}</>
   }
+
+  if (token && loading && communities.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Spinner className="size-10 text-primary" />
+      </div>
+    )
+  }
+
+  if (token && !loading && communities.length === 0) {
+    return (
+      <NoCommunitiesPage
+        onLogout={logout}
+        onRefresh={refreshCommunities}
+      />
+    )
+  }
+
+  // Not authenticated yet — let ProtectedRoute / Login handle it
+  if (!token) {
+    return <>{children}</>
+  }
+
+  const selectedName =
+    communities.find((c) => c.id === selectedCommunityId)?.name || "Choisir…"
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -154,19 +181,16 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             Communauté active
           </label>
           <Select
-            value={selectedCommunityId || "all"}
-            onValueChange={(val) => setSelectedCommunityId(val === "all" ? null : val)}
+            value={selectedCommunityId ?? undefined}
+            onValueChange={(val) => {
+              if (val) setSelectedCommunityId(val)
+            }}
           >
             <SelectTrigger size="sm">
               {loading && <Spinner className="text-primary" />}
-              <span className="truncate">
-                {selectedCommunityId
-                  ? communities.find((c) => c.id === selectedCommunityId)?.name || "Chargement…"
-                  : "Toutes les communautés"}
-              </span>
+              <span className="truncate">{selectedName}</span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes les communautés</SelectItem>
               {communities.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
@@ -174,11 +198,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               ))}
             </SelectContent>
           </Select>
-          {!selectedCommunityId && (
-            <p className="mt-2 px-1 text-[11px] leading-snug text-muted-foreground">
-              Sélectionnez une communauté pour gérer membres, adhésions, affiliations et paramètres.
-            </p>
-          )}
         </div>
 
         <ScrollArea className="flex-1 px-4">
@@ -217,14 +236,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 Organisateur
               </p>
             </div>
-              <Avatar className="size-10 border-2 border-primary/15">
-                {avatarUrl ? (
-                  <AvatarImage src={avatarUrl} alt={`${user?.name ?? "Utilisateur"} avatar`} />
-                ) : null}
-                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
+            <Avatar className="size-10 border-2 border-primary/15">
+              {avatarUrl ? (
+                <AvatarImage src={avatarUrl} alt={`${user?.name ?? "Utilisateur"} avatar`} />
+              ) : null}
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
           </div>
         </header>
 

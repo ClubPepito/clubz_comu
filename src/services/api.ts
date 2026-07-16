@@ -152,6 +152,7 @@ export const eventService = {
 export const communityService = {
   // Core Community
   getAll: () => api.get('/communities'),
+  getMine: () => api.get('/communities/me'),
   getOne: (id: string) => api.get(`/communities/${id}`),
   create: (data: any) => api.post('/communities', data),
   update: (id: string, data: any) => api.patch(`/communities/${id}`, data),

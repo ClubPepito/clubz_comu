@@ -1,12 +1,21 @@
 import type { WidgetDefinition } from '@/types/widgetLibrary';
 import { BRAND_NAME } from '@/constants/branding';
-import { Trash2, Globe } from 'lucide-react';
+import { Trash2, Box, Layout, Terminal, Clock, CheckCircle2, XCircle, FileEdit, Ban } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { WidgetRunner } from './WidgetRunner';
 import { resolveWidgetRemoteUrl } from '@/utils/resolveWidgetRemoteUrl';
 import { resolveImageUrl } from '@/lib/imageUrl';
+import { cn } from '@/lib/utils';
 
 interface Props {
   widgets: WidgetDefinition[];
@@ -16,103 +25,188 @@ interface Props {
   readOnly?: boolean;
 }
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  draft: { label: 'Brouillon', className: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' },
-  pending: { label: 'En attente', className: 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400' },
-  validated: { label: 'Validé', className: 'bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400' },
-  rejected: { label: 'Rejeté', className: 'bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400' },
-  blocked: { label: 'Bloqué', className: 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400' },
+const STATUS_META: Record<
+  string,
+  { label: string; className: string; icon: typeof FileEdit }
+> = {
+  draft: {
+    label: 'Brouillon',
+    className: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    icon: FileEdit,
+  },
+  pending: {
+    label: 'En attente',
+    className: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+    icon: Clock,
+  },
+  validated: {
+    label: 'Validé',
+    className: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
+    icon: CheckCircle2,
+  },
+  rejected: {
+    label: 'Rejeté',
+    className: 'bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800',
+    icon: XCircle,
+  },
+  blocked: {
+    label: 'Bloqué',
+    className: 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
+    icon: Ban,
+  },
 };
 
 export function WidgetList({ widgets, onSelect, onDelete, readOnly = false }: Props) {
   if (widgets.length === 0) {
     return (
-      <div className="border-2 border-dashed border-border rounded-2xl py-16 text-center text-muted-foreground">
-        <Globe className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="font-medium">Aucun widget trouvé.</p>
-        <p className="text-sm mt-1">Développez votre premier widget via la CLI ${BRAND_NAME}.</p>
-      </div>
+      <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
+        <EmptyHeader>
+          <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-primary/10 text-primary [&_svg]:size-5">
+            <Terminal />
+          </EmptyMedia>
+          <EmptyTitle className="text-base">Aucun widget trouvé</EmptyTitle>
+          <EmptyDescription>
+            Développez votre premier widget via la CLI {BRAND_NAME}, puis déployez-le pour le voir apparaître ici.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <code className="rounded-lg bg-muted px-3 py-1.5 font-mono text-xs text-foreground">
+            npx @{BRAND_NAME.toLowerCase()}/cli init mon-widget
+          </code>
+        </EmptyContent>
+      </Empty>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {widgets.map((widget) => {
-        const statusInfo = STATUS_LABELS[widget.status] ?? STATUS_LABELS.draft;
+        const statusInfo = STATUS_META[widget.status] ?? STATUS_META.draft;
+        const StatusIcon = statusInfo.icon;
         const previewUrl = resolveWidgetRemoteUrl(widget.remoteUrl);
+        const isPage = widget.type === 'Page';
+        const TypeIcon = isPage ? Layout : Box;
+        const authorName = widget.author?.username || widget.author?.name || 'Développeur';
+        const authorSeed = widget.author?.username || widget.authorId || 'dev';
+
         return (
-          <div
+          <article
             key={widget.id}
+            role="button"
+            tabIndex={0}
             onClick={() => onSelect?.(widget)}
-            className="group bg-card rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-[280px]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect?.(widget);
+              }
+            }}
+            className={cn(
+              'group relative flex h-[320px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-border/80 bg-card',
+              'shadow-klyb-sm transition-all duration-300 outline-none',
+              'hover:-translate-y-1 hover:border-primary/25 hover:shadow-klyb',
+              'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            )}
           >
-            {/* Zone d'aperçu de l'image */}
-            <div className="h-40 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center overflow-hidden">
+            <div className="relative h-[168px] overflow-hidden bg-gradient-to-br from-secondary via-accent to-muted">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-40"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(45deg, rgba(255,255,255,.35) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,.35) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,.35) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,.35) 75%)',
+                  backgroundSize: '12px 12px',
+                  backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0',
+                }}
+              />
+
               {previewUrl ? (
                 <WidgetRunner
                   widgetId={widget.id}
                   remoteUrl={widget.remoteUrl!}
                   name={widget.name}
                   variant="thumbnail"
-                  className="w-full h-full"
+                  className="relative z-[1] h-full w-full"
                 />
               ) : (
                 <img
                   src={resolveImageUrl(widget.previewUrl) || '/default-widget-preview.png'}
                   alt={`Aperçu de ${widget.name}`}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="relative z-[1] h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="absolute top-3 right-3 flex gap-2">
-                <Badge className={`text-[10px] px-1.5 py-0 ${statusInfo.className}`}>
+
+              <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-card/90 via-transparent to-transparent opacity-80" />
+
+              <div className="absolute left-3 top-3 z-[3] flex flex-wrap items-center gap-1.5">
+                <Badge
+                  className={cn(
+                    'gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold shadow-sm',
+                    statusInfo.className,
+                  )}
+                >
+                  <StatusIcon className="size-3" />
                   {statusInfo.label}
                 </Badge>
-                <Badge variant="secondary" className="bg-black/50 backdrop-blur-md text-white border-white/20 rounded-full px-3 py-1 font-semibold tracking-wide shadow-sm">
-                  WIDGET
+              </div>
+
+              <div className="absolute right-3 top-3 z-[3]">
+                <Badge
+                  variant="secondary"
+                  className="gap-1 rounded-md border border-white/20 bg-foreground/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-md"
+                >
+                  <TypeIcon className="size-3" />
+                  {isPage ? 'Page' : 'Widget'}
                 </Badge>
               </div>
-            </div>
 
-            {/* Informations du widget */}
-            <div className="p-5 flex-1 flex flex-col">
-              <div className="flex justify-between items-start mb-1">
-                <h3 className="text-xl font-bold text-foreground line-clamp-1 flex-1" title={widget.name}>
-                  {widget.name}
-                </h3>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
-                <div className="flex items-center gap-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={resolveImageUrl(widget.author?.avatar) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${widget.author?.username || widget.authorId}`} />
-                    <AvatarFallback>{widget.author?.username?.charAt(0)?.toUpperCase() || 'D'}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-semibold text-muted-foreground truncate max-w-[100px]">
-                    {widget.author?.username || widget.author?.name || 'Développeur'}
+              {widget.semanticVersion && (
+                <div className="absolute bottom-3 right-3 z-[3]">
+                  <span className="rounded-md bg-card/90 px-2 py-0.5 font-mono text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
+                    v{widget.semanticVersion}
                   </span>
                 </div>
+              )}
+            </div>
 
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
+              <h3 className="truncate text-base font-semibold tracking-tight text-foreground" title={widget.name}>
+                {widget.name}
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                {widget.description?.trim() || 'Aucune description fournie.'}
+              </p>
+
+              <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Avatar className="size-6 ring-1 ring-border/60">
+                    <AvatarImage
+                      src={
+                        resolveImageUrl(widget.author?.avatar) ||
+                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${authorSeed}`
+                      }
+                    />
+                    <AvatarFallback className="text-[9px]">{authorName.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="truncate text-xs font-medium text-muted-foreground">{authorName}</span>
+                </div>
 
                 {!readOnly && onDelete && (
                   <Button
                     variant="ghost"
                     size="icon"
                     title="Supprimer"
-                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="size-8 shrink-0 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (confirm('Supprimer ce widget définitivement ?')) onDelete(widget.id);
                     }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="size-4" />
                   </Button>
                 )}
-                </div>
               </div>
             </div>
-          </div>
+          </article>
         );
       })}
     </div>

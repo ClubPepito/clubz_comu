@@ -46,6 +46,13 @@ import { PromoCodeManager } from '@/components/events/PromoCodeManager'
 import { toast } from 'sonner'
 import type { Event, EventAnalytics } from '@/types/event'
 import { resolveImageUrl } from '@/lib/imageUrl'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 
 const EventDetails = () => {
   const { id } = useParams()
@@ -161,28 +168,39 @@ const EventDetails = () => {
 
   if (accessDenied) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
-        <div className="text-4xl">🔒</div>
-        <h2 className="text-lg font-bold">Accès refusé</h2>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Vous n'avez pas les droits pour consulter cet événement.
-        </p>
-        <Link to="/events">
-          <Button variant="outline" size="sm">
-            <ArrowLeft size={14} data-icon="inline-start" /> Retour aux événements
-          </Button>
-        </Link>
+      <div className="flex min-h-[60vh] items-center justify-center p-6">
+        <Empty className="max-w-md border-2 border-dashed border-border/80 bg-muted/20 py-16">
+          <EmptyHeader>
+            <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-destructive/10 text-destructive [&_svg]:size-5">
+              <ArrowLeft />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">Accès refusé</EmptyTitle>
+            <EmptyDescription>
+              Vous n&apos;avez pas les droits pour consulter cet événement.
+            </EmptyDescription>
+          </EmptyHeader>
+          <Link to="/events">
+            <Button variant="outline" size="sm">
+              <ArrowLeft size={14} data-icon="inline-start" /> Retour aux événements
+            </Button>
+          </Link>
+        </Empty>
       </div>
     )
   }
 
   if (!event) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-lg font-bold">Événement introuvable</h2>
-        <Link to="/events" className="text-primary text-xs font-bold mt-2 inline-block">
-          Retour
-        </Link>
+      <div className="flex min-h-[60vh] items-center justify-center p-6">
+        <Empty className="max-w-md border-2 border-dashed border-border/80 bg-muted/20 py-16">
+          <EmptyHeader>
+            <EmptyTitle className="text-base">Événement introuvable</EmptyTitle>
+            <EmptyDescription>Cet événement n&apos;existe pas ou a été supprimé.</EmptyDescription>
+          </EmptyHeader>
+          <Link to="/events">
+            <Button variant="outline" size="sm">Retour aux événements</Button>
+          </Link>
+        </Empty>
       </div>
     )
   }
@@ -203,43 +221,44 @@ const EventDetails = () => {
     <PageShell>
       <Link
         to="/events"
-        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground hover:text-primary transition-all uppercase tracking-wider"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-all hover:text-primary"
       >
         <ArrowLeft size={14} /> Retour
       </Link>
 
       {resolveImageUrl(event.image) && (
-        <div className="relative h-48 md:h-64 w-full overflow-hidden rounded-2xl border border-border shadow-klyb-sm">
+        <div className="relative h-48 w-full overflow-hidden rounded-2xl border border-border/60 shadow-klyb-sm md:h-64">
           <img
             src={resolveImageUrl(event.image)!}
             alt={event.title}
             className="size-full object-cover"
           />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+      <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-border/60 bg-gradient-to-br from-secondary/40 via-card to-accent/30 px-5 py-5 shadow-klyb-sm sm:px-6 lg:flex-row lg:items-center">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar className="h-16 w-16 rounded-2xl border border-border shadow-sm">
+            <Avatar className="h-16 w-16 rounded-2xl border border-border/80 shadow-klyb-sm">
               <AvatarImage src={resolveImageUrl(event.image) || undefined} className="object-cover" />
               <AvatarFallback>EV</AvatarFallback>
             </Avatar>
-            <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 bg-success rounded-lg border-2 border-white flex items-center justify-center shadow-sm">
+            <div className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-lg border-2 border-card bg-success shadow-sm">
               <CheckCircle2 size={12} className="text-white" />
             </div>
           </div>
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-bold tracking-tight">{event.title}</h2>
               <Badge
                 variant="outline"
-                className="text-[8px] font-bold uppercase tracking-widest bg-success/5 text-success border-success/10 px-1.5 py-0"
+                className="border-success/20 bg-success/5 px-1.5 py-0 text-xs font-semibold uppercase tracking-wider text-success"
               >
                 {event.visibility === 'public' ? 'Publié' : 'Privé'}
               </Badge>
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-muted-foreground uppercase tracking-tight opacity-70">
+            <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <CalendarIcon size={12} className="text-primary" />
                 {new Date(event.startDate).toLocaleDateString('fr-FR')}
@@ -256,7 +275,7 @@ const EventDetails = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 px-3 rounded-xl border-border bg-card font-bold gap-2 text-[10px] uppercase tracking-wider"
+                className="h-9 gap-2 rounded-xl border-border bg-card px-3 text-xs font-semibold uppercase tracking-wider"
               >
                 <Pencil size={14} /> Éditer
               </Button>
@@ -266,7 +285,7 @@ const EventDetails = () => {
             variant="outline"
             size="sm"
             onClick={handleExportCalendar}
-            className="h-9 px-3 rounded-xl border-border bg-card font-bold gap-2 text-[10px] uppercase tracking-wider"
+            className="h-9 gap-2 rounded-xl border-border bg-card px-3 text-xs font-semibold uppercase tracking-wider"
           >
             <CalendarIcon size={14} /> iCal
           </Button>
@@ -283,7 +302,7 @@ const EventDetails = () => {
           {permissions.manage_event_checkin && (
             <Button
               size="sm"
-              className="h-9 px-4 rounded-xl font-bold gap-2 shadow-md shadow-primary/10 text-[10px] uppercase tracking-wider"
+              className="h-9 gap-2 rounded-xl px-4 text-xs font-semibold uppercase tracking-wider shadow-md shadow-primary/10"
               onClick={() => setScannerOpen(true)}
             >
               <QrCode size={14} /> Scanner
@@ -302,14 +321,14 @@ const EventDetails = () => {
         {/* ─── Analytics ─── */}
         <PageTabsContent value="analytics" className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
               <CardHeader className="p-4 pb-1">
-                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Revenu
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="text-xl font-black tracking-tighter">
+                <div className="text-xl font-bold tabular-nums tracking-tight">
                   {totalRevenue.toLocaleString('fr-FR')} €
                 </div>
                 {hasRevenueChange && (
@@ -331,14 +350,14 @@ const EventDetails = () => {
                 )}
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
               <CardHeader className="p-4 pb-1">
-                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Check-ins
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="text-xl font-black tracking-tighter">
+                <div className="text-xl font-bold tabular-nums tracking-tight">
                   {checkInCount}{' '}
                   <span className="text-xs text-muted-foreground font-medium">
                     / {capacity || 0}
@@ -357,70 +376,70 @@ const EventDetails = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
               <CardHeader className="p-4 pb-1">
-                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Waitlist
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="text-xl font-black tracking-tighter text-warning">
+                <div className="text-xl font-bold tabular-nums tracking-tight text-warning">
                   {waitlistCount}
                 </div>
-                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50 italic">
+                <p className="mt-1 text-xs font-medium text-muted-foreground italic">
                   {waitlistCount > 0 ? 'Demande forte' : 'Aucune attente'}
                 </p>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
               <CardHeader className="p-4 pb-1">
-                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Billets vendus
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="text-xl font-black tracking-tighter">
+                <div className="text-xl font-bold tabular-nums tracking-tight">
                   {analytics?.ticketsSold ?? analytics?.summary?.totalRegistered ?? 0}
                 </div>
-                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50">
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
                   Remplissage {analytics?.fillRate ?? '-'}
                 </p>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
               <CardHeader className="p-4 pb-1">
-                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Taux check-in
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="text-xl font-black tracking-tighter text-success">
+                <div className="text-xl font-bold tabular-nums tracking-tight text-success">
                   {analytics?.checkInRate ?? '0%'}
                 </div>
-                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50">
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
                   No-show {analytics?.summary?.noShowRate ?? '-'}
                 </p>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
               <CardHeader className="p-4 pb-1">
-                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Conversion
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="text-xl font-black tracking-tighter">
+                <div className="text-xl font-bold tabular-nums tracking-tight">
                   {analytics?.conversionRate ?? '-'}
                 </div>
-                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50">
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
                   {analytics?.interestedCount ?? 0} intéressés
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="border-none shadow-sm rounded-2xl bg-card border border-border">
-            <CardHeader className="p-5 pb-2">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
+            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent p-5 pb-2">
               <CardTitle className="text-sm font-bold">Ventes Live</CardTitle>
             </CardHeader>
             <CardContent className="p-5 pt-0 h-[280px] mt-4">
@@ -467,8 +486,8 @@ const EventDetails = () => {
           </Card>
 
           {analytics?.statsByTicketType && analytics.statsByTicketType.length > 0 && (
-            <Card className="border-none shadow-sm rounded-2xl bg-card border border-border">
-              <CardHeader className="p-5 pb-2">
+            <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
+              <CardHeader className="border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent p-5 pb-2">
                 <CardTitle className="text-sm font-bold">Performance par billet</CardTitle>
               </CardHeader>
               <CardContent className="p-5 pt-0">
@@ -481,7 +500,7 @@ const EventDetails = () => {
                       <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         {tt.name}
                       </p>
-                      <p className="mt-1 text-lg font-black tabular-nums">
+                      <p className="mt-1 text-lg font-bold tabular-nums">
                         {tt.revenue.toLocaleString('fr-FR')} €
                       </p>
                       <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
@@ -510,8 +529,8 @@ const EventDetails = () => {
 
         {/* ─── Attendees ─── */}
         <PageTabsContent value="attendees">
-          <Card className="border-none shadow-sm rounded-2xl bg-card border border-border overflow-hidden">
-            <CardHeader className="p-5 pb-4 flex flex-row items-center justify-between gap-4">
+          <Card className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
+            <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent p-5 pb-4">
               <div className="relative w-48 sm:w-64">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -524,7 +543,7 @@ const EventDetails = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 rounded-lg border-border font-bold gap-2 text-[10px] uppercase tracking-wider"
+                className="h-9 gap-2 rounded-xl border-border text-xs font-semibold uppercase tracking-wider"
               >
                 <Filter size={14} /> Filtre
               </Button>
@@ -533,13 +552,13 @@ const EventDetails = () => {
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow className="hover:bg-transparent border-border">
-                    <TableHead className="px-5 h-10 text-[9px] font-black uppercase tracking-widest opacity-50">
+                    <TableHead className="h-10 px-5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Participant
                     </TableHead>
-                    <TableHead className="h-10 text-[9px] font-black uppercase tracking-widest opacity-50">
+                    <TableHead className="h-10 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Billet
                     </TableHead>
-                    <TableHead className="h-10 text-[9px] font-black uppercase tracking-widest opacity-50 text-center">
+                    <TableHead className="h-10 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Check-in
                     </TableHead>
                     <TableHead className="px-5 h-10" />
@@ -548,8 +567,22 @@ const EventDetails = () => {
                 <TableBody>
                   {filteredAttendees.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-sm text-muted-foreground">
-                        {guestSearch ? 'Aucun résultat pour cette recherche.' : 'Aucun participant inscrit.'}
+                      <TableCell colSpan={4} className="p-0">
+                        <Empty className="border-0 bg-transparent py-12">
+                          <EmptyHeader>
+                            <EmptyMedia variant="icon" className="size-10 rounded-xl bg-muted text-muted-foreground">
+                              <Search />
+                            </EmptyMedia>
+                            <EmptyTitle>
+                              {guestSearch ? 'Aucun résultat' : 'Aucun participant'}
+                            </EmptyTitle>
+                            <EmptyDescription>
+                              {guestSearch
+                                ? 'Aucun invité ne correspond à cette recherche.'
+                                : 'Aucun participant inscrit pour le moment.'}
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -625,7 +658,7 @@ const EventDetails = () => {
 
         {/* ─── Promo codes ─── */}
         <PageTabsContent value="promo">
-          <Card className="border-none shadow-sm rounded-2xl bg-card border border-border p-6">
+          <Card className="rounded-2xl border border-border/80 bg-card p-6 shadow-klyb-sm">
             <PromoCodeManager eventId={event.id} />
           </Card>
         </PageTabsContent>

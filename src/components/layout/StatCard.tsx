@@ -24,13 +24,13 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <Card className={cn("shadow-klyb-sm border-border/60 transition-shadow hover:shadow-klyb", className)}>
+    <Card className={cn("rounded-2xl border-border/80 shadow-klyb-sm transition-shadow hover:shadow-klyb", className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {title}
         </CardTitle>
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Icon />
+        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="size-4" />
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">

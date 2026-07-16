@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCommunity } from '../context/CommunityContext';
 import { 
   ShieldAlert, 
@@ -30,12 +30,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { AtmosphericHeader } from '@/components/layout/AtmosphericHeader';
 import { PageLoader } from '@/components/layout/PageLoader';
 import { PageShell } from '@/components/layout/PageShell';
 import { SearchField } from '@/components/layout/SearchField';
 import { FilterBar } from '@/components/layout/FilterBar';
 import { PageTabs, PageTabsList, PageTabsTrigger, PageTabsContent } from '@/components/layout/PageTabs';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import { resolveImageUrl } from '@/lib/imageUrl';
 
@@ -79,7 +86,7 @@ const PollDisplay = ({ poll }: { poll: any }) => {
                 {option.text}
                 {option.viewerVoted && <Check size={12} className="inline ml-1.5 text-primary" />}
               </span>
-              <span className="text-[10px] font-black text-muted-foreground">{percentage}%</span>
+              <span className="text-xs font-semibold text-muted-foreground tabular-nums">{percentage}%</span>
             </div>
           </div>
         );
@@ -107,7 +114,7 @@ const RichText = ({ content, entities }: { content: string, entities?: any }) =>
     }
     const entityText = content.substring(entity.start, entity.end);
     if (entity.type === 'mention') {
-      elements.push(<span key={`m-${idx}`} className="text-primary font-black cursor-pointer hover:underline">{entityText}</span>);
+      elements.push(<span key={`m-${idx}`} className="text-primary font-semibold cursor-pointer hover:underline">{entityText}</span>);
     } else if (entity.type === 'hashtag') {
       elements.push(<span key={`h-${idx}`} className="text-primary font-bold cursor-pointer hover:underline">{entityText}</span>);
     } else {
@@ -189,10 +196,15 @@ const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) 
             </div>
           ))
         ) : (
-          <div className="text-center py-20 opacity-30">
-            <MessageCircle className="mx-auto mb-2" size={24} />
-            <p className="text-[10px] font-bold uppercase tracking-widest">Aucun commentaire</p>
-          </div>
+          <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-12">
+            <EmptyHeader>
+              <EmptyMedia variant="icon" className="size-10 rounded-xl bg-muted text-muted-foreground">
+                <MessageCircle />
+              </EmptyMedia>
+              <EmptyTitle>Aucun commentaire</EmptyTitle>
+              <EmptyDescription>Soyez le premier à répondre à ce post.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </div>
 
@@ -237,7 +249,7 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
       exit={{ opacity: 0, scale: 0.98 }}
       className="group relative"
     >
-      <Card className="border-none shadow-sm bg-card rounded-2xl overflow-hidden mb-4 transition-all hover:shadow-md border border-border">
+      <Card className="mb-4 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-klyb-sm transition-all hover:shadow-klyb">
         <CardContent className="p-0">
           <div className="p-4 pb-3 flex items-start justify-between">
             <div className="flex items-center gap-3">
@@ -283,7 +295,7 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
             </div>
 
             {post.location && (
-              <div className="flex items-center gap-1 text-[9px] text-primary font-black uppercase tracking-widest mb-3">
+              <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
                 <MapPin size={12} /> {post.location.name}
               </div>
             )}
@@ -430,18 +442,25 @@ const Moderation = () => {
     return true;
   });
 
+  const reportCounts = useMemo(() => ({
+    all: reports.length,
+    pending: reports.filter((r) => r.status === 'pending').length,
+    resolved: reports.filter((r) => r.status === 'resolved').length,
+    dismissed: reports.filter((r) => r.status === 'dismissed').length,
+  }), [reports]);
+
   const REPORT_FILTER_OPTIONS = [
-    { value: 'pending', label: 'En attente' },
-    { value: 'resolved', label: 'Résolus' },
-    { value: 'dismissed', label: 'Ignorés' },
-    { value: 'all', label: 'Tous' },
+    { value: 'pending', label: 'En attente', count: reportCounts.pending },
+    { value: 'resolved', label: 'Résolus', count: reportCounts.resolved },
+    { value: 'dismissed', label: 'Ignorés', count: reportCounts.dismissed },
+    { value: 'all', label: 'Tous', count: reportCounts.all },
   ];
 
   if (loading) return <PageLoader />;
 
   return (
     <PageShell className="relative overflow-x-hidden">
-      <PageHeader
+      <AtmosphericHeader
         title="Modération & Social"
         description="Contrôle et animation du contenu communautaire"
         actions={
@@ -452,6 +471,12 @@ const Moderation = () => {
               Filtre
             </Button>
           </>
+        }
+        meta={
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldAlert className="size-3.5 text-primary" />
+            {posts.length} post{posts.length !== 1 ? 's' : ''} · {reportCounts.pending} signalement{reportCounts.pending !== 1 ? 's' : ''} en attente
+          </p>
         }
       />
 
@@ -469,35 +494,42 @@ const Moderation = () => {
                 {posts.length > 0 ? posts.map((post) => (
                   <PostCard key={post.id} post={post} onDelete={handleDeletePost} onCommentClick={(p) => setSelectedPostForComments(p)} />
                 )) : (
-                  <div className="py-20 text-center bg-card rounded-3xl shadow-sm border border-dashed border-border">
-                    <MessageSquare size={40} className="mx-auto text-muted-foreground mb-4" />
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Aucun post à modérer</p>
-                  </div>
+                  <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-muted text-muted-foreground [&_svg]:size-5">
+                        <MessageSquare />
+                      </EmptyMedia>
+                      <EmptyTitle className="text-base">Aucun post à modérer</EmptyTitle>
+                      <EmptyDescription>
+                        Le flux social de cette communauté est vide pour le moment.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 )}
               </AnimatePresence>
             </div>
 
             <div className="lg:col-span-4 space-y-4 hidden lg:block">
-              <Card className="border-none shadow-sm bg-card rounded-3xl p-6 sticky top-28 border border-border">
+              <Card className="sticky top-28 rounded-2xl border border-border/80 bg-card p-6 shadow-klyb-sm">
                 <div className="space-y-6">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner">
                     <ShieldAlert size={24} />
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-foreground">Vue d'ensemble</h3>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Statistiques de la semaine</p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statistiques de la semaine</p>
                   </div>
                   <div className="space-y-3">
-                    <div className="bg-muted/50 p-4 rounded-2xl border border-border shadow-sm">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1">Flux Social</p>
-                      <p className="text-2xl font-black text-foreground">{posts.length}</p>
+                    <div className="rounded-2xl border border-border/80 bg-muted/50 p-4 shadow-klyb-sm">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Flux Social</p>
+                      <p className="text-2xl font-bold tabular-nums text-foreground">{posts.length}</p>
                     </div>
-                    <div className="bg-muted/50 p-4 rounded-2xl border border-border shadow-sm">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1">Croissance</p>
-                      <p className="text-2xl font-black text-primary">+12.5%</p>
+                    <div className="rounded-2xl border border-border/80 bg-muted/50 p-4 shadow-klyb-sm">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Croissance</p>
+                      <p className="text-2xl font-bold tabular-nums text-primary">+12.5%</p>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full h-11 rounded-xl font-bold text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:bg-muted border-border shadow-sm">
+                  <Button variant="outline" className="h-11 w-full rounded-xl border-border text-xs font-semibold uppercase tracking-wider text-muted-foreground shadow-sm hover:bg-muted">
                     Télécharger le rapport
                   </Button>
                 </div>
@@ -510,10 +542,17 @@ const Moderation = () => {
           {selectedCommunityId ? (
             <ModerationChat communityId={selectedCommunityId} />
           ) : (
-            <div className="flex flex-col items-center justify-center h-[500px] border border-dashed rounded-3xl opacity-40 bg-muted/50">
-              <MessageSquare size={48} className="mb-4 text-muted-foreground" />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Sélectionnez une communauté</p>
-            </div>
+            <Empty className="h-[500px] border-2 border-dashed border-border/80 bg-muted/20 py-16">
+              <EmptyHeader>
+                <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-muted text-muted-foreground [&_svg]:size-5">
+                  <MessageSquare />
+                </EmptyMedia>
+                <EmptyTitle className="text-base">Sélectionnez une communauté</EmptyTitle>
+                <EmptyDescription>
+                  Choisissez une communauté dans la barre latérale pour accéder aux salons de chat.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
         </PageTabsContent>
 
@@ -524,8 +563,8 @@ const Moderation = () => {
               value={reportsFilter}
               onChange={(v) => setReportsFilter(v as typeof reportsFilter)}
               trailing={
-                <span className="mr-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                  {filteredReports.length} Signalements
+                <span className="mr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {filteredReports.length} signalement{filteredReports.length !== 1 ? 's' : ''}
                 </span>
               }
             />
@@ -533,7 +572,7 @@ const Moderation = () => {
             {filteredReports.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredReports.map((report) => (
-                  <Card key={report.id} className="border-none shadow-sm bg-card rounded-3xl p-5 border border-border flex flex-col justify-between">
+                  <Card key={report.id} className="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-klyb-sm">
                     <div className="space-y-4">
                       {/* En-tête du signalement */}
                       <div className="flex justify-between items-start">
@@ -570,7 +609,7 @@ const Moderation = () => {
 
                       {/* Aperçu du contenu ciblé */}
                       <div className="bg-muted p-3 rounded-2xl border border-border/50 space-y-2">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Contenu ciblé</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contenu ciblé</p>
                         
                         {report.type === 'post' && report.targetPost && (
                           <div className="text-xs font-semibold text-foreground leading-snug">
@@ -658,17 +697,19 @@ const Moderation = () => {
                 ))}
               </div>
             ) : (
-              <Card className="border-none shadow-sm bg-card rounded-3xl py-20 text-center space-y-6 border border-border">
-                <div className="h-20 w-20 rounded-full bg-green-50 flex items-center justify-center mx-auto shadow-inner border border-green-100/50">
-                  <ShieldAlert size={36} className="text-green-500" />
-                </div>
-                <div className="max-w-xs mx-auto px-4">
-                  <h4 className="text-sm font-black text-foreground tracking-tight">Aucun signalement</h4>
-                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed mt-2 uppercase tracking-wide">
-                    {reportsFilter === 'pending' ? 'Aucun signalement en attente de traitement.' : 'Aucun signalement trouvé pour ce filtre.'}
-                  </p>
-                </div>
-              </Card>
+              <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-success/10 text-success [&_svg]:size-5">
+                    <ShieldAlert />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-base">Aucun signalement</EmptyTitle>
+                  <EmptyDescription>
+                    {reportsFilter === 'pending'
+                      ? 'Aucun signalement en attente de traitement.'
+                      : 'Aucun signalement trouvé pour ce filtre.'}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             )}
           </div>
         </PageTabsContent>

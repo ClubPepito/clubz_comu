@@ -42,6 +42,13 @@ import { channelService, chatService } from '@/services/api';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 
 interface Channel {
   id: string;
@@ -227,11 +234,11 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
   }
 
   return (
-    <div className="flex h-[700px] border rounded-3xl overflow-hidden bg-background shadow-xl">
+    <div className="flex h-[700px] overflow-hidden rounded-2xl border border-border/80 bg-background shadow-klyb-sm">
       {/* Sidebar - Discord Style */}
       <div className="w-64 flex flex-col bg-muted/20 border-r">
         <div className="p-4 border-b bg-background/40 backdrop-blur-md flex items-center justify-between">
-          <h3 className="font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 text-muted-foreground">
+          <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <MessageSquare size={14} className="text-primary" />
             Social Hub
           </h3>
@@ -249,7 +256,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
                   setSelectedCategoryName(category.name);
                   setIsChannelModalOpen(true);
                 }}>
-                  <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest hover:text-primary transition-colors">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 transition-colors hover:text-primary">
                     {category.name}
                   </span>
                   <div className="flex items-center gap-1 transition-opacity">
@@ -301,7 +308,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
                         ) : (
                           <Hash size={14} className={selectedChannel?.id === channel.id ? 'text-primary-foreground' : 'text-muted-foreground/60'} />
                         )}
-                        <span className={`text-xs ${selectedChannel?.id === channel.id ? 'font-black uppercase tracking-wide' : 'font-semibold'}`}>
+                        <span className={`text-xs ${selectedChannel?.id === channel.id ? 'font-semibold uppercase tracking-wide' : 'font-medium'}`}>
                           {channel.name}
                         </span>
                       </button>
@@ -338,7 +345,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-background relative">
         {!isConnected && (
-          <div className="absolute top-0 left-0 right-0 z-20 bg-primary/5 border-b border-primary/10 px-4 py-1.5 text-[9px] text-center text-primary font-black uppercase tracking-[0.2em] animate-pulse">
+          <div className="absolute top-0 left-0 right-0 z-20 animate-pulse border-b border-primary/10 bg-primary/5 px-4 py-1.5 text-center text-xs font-semibold uppercase tracking-wider text-primary">
             Connecting to Real-time Stream...
           </div>
         )}
@@ -350,10 +357,10 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
               {selectedChannel?.type === 'announcement' ? <Megaphone size={20} /> : <Hash size={20} />}
             </div>
             <div>
-              <h4 className="font-black text-sm uppercase tracking-wider text-foreground leading-none">
+              <h4 className="text-sm font-semibold uppercase tracking-wider leading-none text-foreground">
                 {selectedChannel?.name || 'Social Hub'}
               </h4>
-              <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-1.5 flex items-center gap-2">
+              <p className="mt-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <span className="flex h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                 {selectedChannel?.type === 'announcement' ? 'Announcements Flow' : 'General Discussion'}
               </p>
@@ -365,12 +372,17 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
         <ScrollArea className="flex-1 px-8 py-6">
           <div className="space-y-8 pb-4">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="h-20 w-20 bg-muted/20 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                  <MessageSquare size={32} className="text-muted-foreground/30" />
-                </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Le silence est d'or</p>
-              </div>
+              <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-muted text-muted-foreground [&_svg]:size-5">
+                    <MessageSquare />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-base">Aucun message</EmptyTitle>
+                  <EmptyDescription>
+                    Ce salon est silencieux pour le moment. Lancez la conversation !
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               messages.map((message, index) => {
                 const showAvatar = index === 0 || messages[index - 1].sender?.id !== message.sender?.id;
@@ -381,13 +393,13 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
                       {showAvatar ? (
                         <Avatar className="h-12 w-12 rounded-2xl border-2 border-background shadow-lg group-hover:scale-105 transition-transform">
                           <AvatarImage src={resolveImageUrl(message.sender?.avatar) || undefined} />
-                          <AvatarFallback className="bg-primary/5 text-primary text-xs font-black uppercase tracking-tighter">
+                          <AvatarFallback className="bg-primary/5 text-xs font-semibold uppercase tracking-tighter text-primary">
                             {message.sender?.name?.[0] || <User size={16} />}
                           </AvatarFallback>
                         </Avatar>
                       ) : (
                         <div className="w-12 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity pt-1">
-                          <span className="text-[8px] font-black text-muted-foreground/40">{format(new Date(message.createdAt), 'HH:mm')}</span>
+                          <span className="text-xs font-medium text-muted-foreground/40">{format(new Date(message.createdAt), 'HH:mm')}</span>
                         </div>
                       )}
                     </div>
@@ -395,7 +407,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
                     <div className="flex-1 min-w-0">
                       {showAvatar && (
                         <div className="flex items-center gap-3 mb-1.5">
-                          <span className="font-black text-xs uppercase tracking-tight text-foreground hover:text-primary transition-colors cursor-pointer">
+                          <span className="cursor-pointer text-xs font-semibold uppercase tracking-tight text-foreground transition-colors hover:text-primary">
                             {message.sender?.name || 'Ghost User'}
                           </span>
                           <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest bg-muted/30 px-2 py-0.5 rounded-full">
@@ -451,12 +463,12 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
             </Button>
           </form>
           <div className="flex items-center gap-4 mt-3 px-2">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
-              Press Enter to send
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/40">
+              Entrée pour envoyer
             </p>
             <div className="h-1 w-1 rounded-full bg-muted-foreground/20" />
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
-              Markdown supported
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/40">
+              Markdown supporté
             </p>
           </div>
         </div>
@@ -464,9 +476,9 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
 
       {/* Modals */}
       <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
-        <DialogContent className="rounded-3xl border-none shadow-2xl">
+        <DialogContent className="rounded-2xl border border-border/80 shadow-klyb-sm">
           <DialogHeader>
-            <DialogTitle className="font-black text-lg uppercase tracking-tight">Nouvelle Catégorie</DialogTitle>
+            <DialogTitle className="text-lg font-semibold tracking-tight">Nouvelle catégorie</DialogTitle>
           </DialogHeader>
           <div className="py-6">
             <Input
@@ -477,17 +489,17 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
             />
           </div>
           <DialogFooter>
-            <Button variant="ghost" className="rounded-xl font-bold uppercase text-[10px]" onClick={() => setIsCategoryModalOpen(false)}>Annuler</Button>
-            <Button className="rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 px-8" onClick={handleCreateCategory}>Créer la catégorie</Button>
+            <Button variant="ghost" className="rounded-xl text-xs font-semibold uppercase" onClick={() => setIsCategoryModalOpen(false)}>Annuler</Button>
+            <Button className="rounded-xl px-8 text-xs font-semibold uppercase tracking-wider shadow-lg shadow-primary/20" onClick={handleCreateCategory}>Créer la catégorie</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isChannelModalOpen} onOpenChange={setIsChannelModalOpen}>
-        <DialogContent className="rounded-3xl border-none shadow-2xl">
+        <DialogContent className="rounded-2xl border border-border/80 shadow-klyb-sm">
           <DialogHeader>
-            <DialogTitle className="font-black text-lg uppercase tracking-tight">Nouveau Salon</DialogTitle>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">
+            <DialogTitle className="text-lg font-semibold tracking-tight">Nouveau salon</DialogTitle>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Dans la catégorie <span className="text-primary">{selectedCategoryName}</span>
             </p>
           </DialogHeader>
@@ -518,13 +530,13 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
             </Select>
           </div>
           <DialogFooter>
-            <Button variant="ghost" className="rounded-xl font-bold uppercase text-[10px]" onClick={() => {
+            <Button variant="ghost" className="rounded-xl text-xs font-semibold uppercase" onClick={() => {
               setIsChannelModalOpen(false);
               setSelectedCategoryId(null);
               setSelectedCategoryName(null);
             }} disabled={isCreatingChannel}>Annuler</Button>
             <Button
-              className="rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 px-8 gap-2"
+              className="gap-2 rounded-xl px-8 text-xs font-semibold uppercase tracking-wider shadow-lg shadow-primary/20"
               onClick={handleCreateChannel}
               disabled={isCreatingChannel || !newChannelName.trim() || !selectedCategoryId}
             >
@@ -536,9 +548,9 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
       </Dialog>
 
       <Dialog open={isRenameModalOpen} onOpenChange={setIsRenameModalOpen}>
-        <DialogContent className="rounded-3xl border-none shadow-2xl">
+        <DialogContent className="rounded-2xl border border-border/80 shadow-klyb-sm">
           <DialogHeader>
-            <DialogTitle className="font-black text-lg uppercase tracking-tight">Renommer</DialogTitle>
+            <DialogTitle className="text-lg font-semibold tracking-tight">Renommer</DialogTitle>
           </DialogHeader>
           <div className="py-6">
             <Input
@@ -549,8 +561,8 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
             />
           </div>
           <DialogFooter>
-            <Button variant="ghost" className="rounded-xl font-bold uppercase text-[10px]" onClick={() => setIsRenameModalOpen(false)}>Annuler</Button>
-            <Button className="rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 px-8" onClick={handleRename}>Confirmer</Button>
+            <Button variant="ghost" className="rounded-xl text-xs font-semibold uppercase" onClick={() => setIsRenameModalOpen(false)}>Annuler</Button>
+            <Button className="rounded-xl px-8 text-xs font-semibold uppercase tracking-wider shadow-lg shadow-primary/20" onClick={handleRename}>Confirmer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

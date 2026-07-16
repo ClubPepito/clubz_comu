@@ -1,28 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useWidgetLibraryStore } from '@/store/widgetLibraryStore';
 import { useAuth } from '@/context/AuthContext';
 import { WidgetList } from '@/components/widgets/WidgetList';
-import { Loader2, Key, Trash2, Plus, Copy, Check, Terminal } from 'lucide-react';
+import {
+  Loader2,
+  Key,
+  Trash2,
+  Plus,
+  Copy,
+  Check,
+  Terminal,
+  BookOpen,
+  Layers,
+  ShieldAlert,
+  Sparkles,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-
 import { EditWidgetModal } from '@/components/widgets/EditWidgetModal';
 import { Documentation } from '@/components/developer/Documentation';
 import { BRAND_NAME } from '@/constants/branding';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Layers } from 'lucide-react';
+import { AtmosphericHeader } from '@/components/layout/AtmosphericHeader';
 import { userService } from '@/services/api';
+import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export default function Developer() {
-  const { definitions, isLoading, fetchMyWidgets, removeDraft, submitForModeration } = useWidgetLibraryStore();
+  const { definitions, isLoading, fetchMyWidgets, removeDraft, submitForModeration } =
+    useWidgetLibraryStore();
   const { user, refreshUser } = useAuth();
 
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedWidget, setSelectedWidget] = useState<any | null>(null);
-  
+
   const [localApiKey, setLocalApiKey] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
   const [apiKeyHint, setApiKeyHint] = useState<string | null>(null);
@@ -49,7 +61,7 @@ export default function Developer() {
       setApiKeyHint(`klyb_***${res.data.apiKey.slice(-4)}`);
       if (refreshUser) await refreshUser();
       toast.success('Clé API générée avec succès');
-    } catch (err) {
+    } catch {
       toast.error('Erreur lors de la génération de la clé API');
     } finally {
       setIsGeneratingKey(false);
@@ -57,7 +69,12 @@ export default function Developer() {
   };
 
   const handleRevoke = async () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir révoquer cette clé ? Les applications l\'utilisant ne fonctionneront plus.')) return;
+    if (
+      !window.confirm(
+        "Êtes-vous sûr de vouloir révoquer cette clé ? Les applications l'utilisant ne fonctionneront plus.",
+      )
+    )
+      return;
     try {
       await userService.revokeApiKey();
       setLocalApiKey(null);
@@ -65,7 +82,7 @@ export default function Developer() {
       setApiKeyHint(null);
       if (refreshUser) await refreshUser();
       toast.success('Clé API révoquée');
-    } catch (err) {
+    } catch {
       toast.error('Erreur lors de la révocation');
     }
   };
@@ -76,10 +93,19 @@ export default function Developer() {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  // Filter only widgets belonging to current user
   const userWidgets = definitions.filter((w) => user && w.authorId === user.id);
   const displayedWidgets =
     filterStatus === 'all' ? userWidgets : userWidgets.filter((w) => w.status === filterStatus);
+
+  const statusCounts = useMemo(() => {
+    const base = { all: userWidgets.length, draft: 0, pending: 0, validated: 0, rejected: 0 };
+    for (const w of userWidgets) {
+      if (w.status in base) {
+        base[w.status as keyof typeof base] += 1;
+      }
+    }
+    return base;
+  }, [userWidgets]);
 
   useEffect(() => {
     fetchMyWidgets();
@@ -91,110 +117,153 @@ export default function Developer() {
     { value: 'pending', label: 'En attente' },
     { value: 'validated', label: 'Validés' },
     { value: 'rejected', label: 'Rejetés' },
-  ];
+  ] as const;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
-      {/* Page Header */}
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Espace Développeur</h1>
-          <p className="text-muted-foreground mt-2 text-lg">Gérez vos widgets et vos clés API CLI pour {BRAND_NAME}.</p>
-        </div>
-      </div>
-
-
+    <div className="flex flex-col gap-8 pb-12">
+      <AtmosphericHeader
+        tone="accent"
+        title="Espace Développeur"
+        description={`Publiez, gérez et documentez vos extensions ${BRAND_NAME} — widgets, pages et clés CLI.`}
+        meta={
+          !isLoading ? (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Sparkles className="size-3.5 text-primary" />
+              {statusCounts.all} création{statusCounts.all !== 1 ? 's' : ''} ·{' '}
+              {statusCounts.validated} validée{statusCounts.validated !== 1 ? 's' : ''} ·{' '}
+              {statusCounts.pending} en revue
+            </p>
+          ) : undefined
+        }
+      />
 
       <Tabs defaultValue="widgets" className="w-full">
-        <TabsList className="mb-4 p-1 h-12 bg-muted/50 border border-border/50 rounded-xl">
-          <TabsTrigger value="widgets" className="rounded-lg h-9 px-6 font-semibold gap-2 data-[state=active]:shadow-sm data-[state=active]:bg-background">
-            <Layers className="w-4 h-4" /> Vos Créations
+        <TabsList className="mb-6 h-11 gap-1 rounded-xl border border-border/50 bg-muted/40 p-1">
+          <TabsTrigger
+            value="widgets"
+            className="gap-2 rounded-lg px-5 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Layers className="size-4" /> Vos Créations
           </TabsTrigger>
-          <TabsTrigger value="docs" className="rounded-lg h-9 px-6 font-semibold gap-2 data-[state=active]:shadow-sm data-[state=active]:bg-background">
-            <BookOpen className="w-4 h-4" /> Documentation
+          <TabsTrigger
+            value="docs"
+            className="gap-2 rounded-lg px-5 font-semibold data-[state=active]:shadow-sm"
+          >
+            <BookOpen className="size-4" /> Documentation
           </TabsTrigger>
-          <TabsTrigger value="api-keys" className="rounded-lg h-9 px-6 font-semibold gap-2 data-[state=active]:shadow-sm data-[state=active]:bg-background">
-            <Key className="w-4 h-4" /> Clés API
+          <TabsTrigger
+            value="api-keys"
+            className="gap-2 rounded-lg px-5 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Key className="size-4" /> Clés API
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="widgets" className="space-y-6 mt-0">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-4">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">Vos Créations</h2>
-            <p className="text-muted-foreground">Déployez et gérez vos widgets depuis l'interface web.</p>
-          </div>
+        <TabsContent value="widgets" className="mt-0 space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Vos créations</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Ouvrez un widget pour éditer le manifeste, les secrets et la validation marketplace.
+              </p>
+            </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex bg-muted/50 p-1 rounded-lg border border-border flex-wrap gap-1">
-              {FILTER_BUTTONS.map(({ value, label }) => (
-                <Button
-                  key={value}
-                  variant={filterStatus === value ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setFilterStatus(value)}
-                  className="text-xs"
-                >
-                  {label}
-                </Button>
-              ))}
+            <div className="flex flex-wrap gap-1 rounded-xl border border-border/60 bg-muted/40 p-1">
+              {FILTER_BUTTONS.map(({ value, label }) => {
+                const count = statusCounts[value];
+                const active = filterStatus === value;
+                return (
+                  <Button
+                    key={value}
+                    variant={active ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setFilterStatus(value)}
+                    className={cn(
+                      'h-8 gap-1.5 rounded-lg text-xs font-medium',
+                      active && 'shadow-sm',
+                    )}
+                  >
+                    {label}
+                    <span
+                      className={cn(
+                        'rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+                        active ? 'bg-primary/15 text-primary' : 'bg-background/80 text-muted-foreground',
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
-        </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20 gap-3 text-muted-foreground">
-            <Loader2 className="w-6 h-6 animate-spin" />
-            Chargement de vos widgets...
-          </div>
-        ) : (
-          <WidgetList
-            widgets={displayedWidgets}
-            onSelect={(widget) => setSelectedWidget(widget)}
-            onDelete={(id) => removeDraft(id)}
-            onSubmit={(id) => submitForModeration(id)}
-            readOnly={false}
-          />
-        )}
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-3 py-20 text-muted-foreground">
+              <Loader2 className="size-6 animate-spin text-primary" />
+              <span className="text-sm">Chargement de vos widgets…</span>
+            </div>
+          ) : (
+            <WidgetList
+              widgets={displayedWidgets}
+              onSelect={(widget) => setSelectedWidget(widget)}
+              onDelete={(id) => removeDraft(id)}
+              onSubmit={(id) => submitForModeration(id)}
+              readOnly={false}
+            />
+          )}
         </TabsContent>
+
         <TabsContent value="docs" className="mt-0">
           <Documentation />
         </TabsContent>
-        
-        {/* ── TAB: Clés API ── */}
+
         <TabsContent value="api-keys" className="mt-0">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left: API Keys List */}
-            <div className="lg:col-span-2 space-y-8">
-              <Card>
-                <CardHeader className="border-b border-border bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <Key className="w-5 h-5 text-indigo-500" /> Votre Clé API CLI
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <Card className="overflow-hidden shadow-klyb-sm">
+                <CardHeader className="border-b border-border/60 bg-gradient-to-r from-muted/40 to-transparent">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Key className="size-4" />
+                    </span>
+                    Votre clé API CLI
                   </CardTitle>
+                  <CardDescription>
+                    Authentifie la CLI {BRAND_NAME} pour déployer et mettre à jour vos widgets.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
-                  
                   {!hasApiKey ? (
-                    <div className="space-y-4">
-                      <div className="text-center py-12 border-2 border-dashed border-border rounded-xl">
-                        <Key className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-muted-foreground font-medium">Aucune clé active.</p>
-                        <p className="text-muted-foreground text-sm mb-6">Créez-en une pour commencer à développer via la CLI Klyb.</p>
-                        
-                        <form onSubmit={handleGenerate}>
-                          <Button type="submit" disabled={isGeneratingKey} className="gap-2">
-                            {isGeneratingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Générer ma clé API
-                          </Button>
-                        </form>
+                    <div className="rounded-2xl border-2 border-dashed border-border/80 bg-muted/20 px-6 py-12 text-center">
+                      <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                        <Key className="size-6" />
                       </div>
+                      <p className="font-medium text-foreground">Aucune clé active</p>
+                      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                        Créez une clé pour commencer à développer et déployer via la CLI {BRAND_NAME}.
+                      </p>
+                      <form onSubmit={handleGenerate} className="mt-6">
+                        <Button type="submit" disabled={isGeneratingKey} className="gap-2">
+                          {isGeneratingKey ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Plus className="size-4" />
+                          )}
+                          Générer ma clé API
+                        </Button>
+                      </form>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="group flex flex-col p-4 bg-muted/30 rounded-xl border border-border transition-all">
-                        <div className="flex items-center justify-between mb-4">
+                    <div className="space-y-5">
+                      <div className="rounded-2xl border border-border/80 bg-muted/20 p-5">
+                        <div className="mb-4 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-foreground">Clé Principale</span>
-                            <Badge variant="outline" className="text-xs font-normal text-emerald-600 border-emerald-200 bg-emerald-50">
+                            <span className="font-semibold text-foreground">Clé principale</span>
+                            <Badge
+                              variant="outline"
+                              className="border-emerald-200 bg-emerald-50 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                            >
                               Active
                             </Badge>
                           </div>
@@ -202,40 +271,47 @@ export default function Developer() {
                             variant="ghost"
                             size="sm"
                             onClick={handleRevoke}
-                            className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                           >
-                            <Trash2 className="w-4 h-4 mr-2" /> Révoquer
+                            <Trash2 className="mr-2 size-4" /> Révoquer
                           </Button>
                         </div>
 
                         {localApiKey ? (
                           <>
-                            <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-emerald-800 text-sm mb-4">
-                              <strong>Nouvelle clé générée !</strong> Copiez-la maintenant. Pour des raisons de sécurité, vous ne pourrez plus la voir une fois cette page fermée.
+                            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+                              <strong>Nouvelle clé générée.</strong> Copiez-la maintenant — elle ne
+                              sera plus affichée après fermeture de cette page.
                             </div>
-                            <div className="font-mono text-sm text-muted-foreground bg-background px-4 py-3 rounded-lg border border-border flex items-center justify-between break-all">
+                            <div className="flex items-center justify-between gap-3 break-all rounded-xl border border-border bg-card px-4 py-3 font-mono text-sm text-foreground">
                               <span>{localApiKey}</span>
                               <button
+                                type="button"
                                 onClick={() => handleCopy(localApiKey)}
-                                className="ml-4 text-muted-foreground hover:text-indigo-600 transition-colors flex-shrink-0 bg-muted/50 p-2 rounded-md"
+                                className="shrink-0 rounded-lg bg-muted p-2 text-muted-foreground transition-colors hover:text-primary"
                               >
                                 {copiedKey === localApiKey ? (
-                                  <Check className="w-4 h-4 text-green-500" />
+                                  <Check className="size-4 text-emerald-500" />
                                 ) : (
-                                  <Copy className="w-4 h-4" />
+                                  <Copy className="size-4" />
                                 )}
                               </button>
                             </div>
                           </>
                         ) : (
-                          <div className="font-mono text-sm text-muted-foreground bg-background px-4 py-3 rounded-lg border border-border flex items-center justify-between">
-                            <span>{apiKeyHint}</span>
+                          <div className="rounded-xl border border-border bg-card px-4 py-3 font-mono text-sm text-muted-foreground">
+                            {apiKeyHint}
                           </div>
                         )}
                       </div>
-                      
-                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-amber-800 text-sm">
-                        <strong>Attention :</strong> Gardez votre clé secrète. Toute personne la possédant peut déployer des widgets en votre nom. Si elle est compromise, révoquez-la immédiatement.
+
+                      <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                        <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+                        <p>
+                          <strong>Attention :</strong> gardez votre clé secrète. Quiconque la possède
+                          peut déployer des widgets en votre nom. En cas de fuite, révoquez-la
+                          immédiatement.
+                        </p>
                       </div>
                     </div>
                   )}
@@ -243,63 +319,77 @@ export default function Developer() {
               </Card>
             </div>
 
-            {/* Right: Quick Start Guide */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Terminal className="w-5 h-5 text-muted-foreground" />
-                    Guide de Démarrage Rapide
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ol className="list-decimal pl-4 space-y-4 text-muted-foreground text-sm">
-                    <li>
-                      <strong className="text-foreground">Générez une clé API</strong>
-                      <p className="text-xs mt-1">Créez une clé ci-contre et copiez-la.</p>
+            <Card className="shadow-klyb-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <Terminal className="size-4" />
+                  </span>
+                  Démarrage rapide
+                </CardTitle>
+                <CardDescription>Les 5 étapes pour publier votre premier widget.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ol className="space-y-4">
+                  {[
+                    {
+                      title: 'Générez une clé API',
+                      body: 'Créez une clé ci-contre et copiez-la.',
+                    },
+                    {
+                      title: `Installez la CLI ${BRAND_NAME}`,
+                      body: `npm install -g @${BRAND_NAME.toLowerCase()}/cli`,
+                      mono: true,
+                    },
+                    {
+                      title: 'Initialisez un projet',
+                      body: `${BRAND_NAME.toLowerCase()} init mon-widget`,
+                      mono: true,
+                    },
+                    {
+                      title: 'Développez & testez',
+                      body: `cd mon-widget && ${BRAND_NAME.toLowerCase()} dev`,
+                      mono: true,
+                    },
+                    {
+                      title: 'Déployez',
+                      body: `Ajoutez la clé dans .env puis ${BRAND_NAME.toLowerCase()} deploy`,
+                    },
+                  ].map((step, i) => (
+                    <li key={step.title} className="flex gap-3">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">{step.title}</p>
+                        {step.mono ? (
+                          <code className="mt-1 block truncate rounded-md bg-muted px-2 py-1 font-mono text-[11px] text-foreground">
+                            {step.body}
+                          </code>
+                        ) : (
+                          <p className="mt-0.5 text-xs text-muted-foreground">{step.body}</p>
+                        )}
+                      </div>
                     </li>
-                    <li>
-                      <strong className="text-foreground">Installez la CLI {BRAND_NAME}</strong>
-                      <p className="text-xs mt-1 font-mono bg-muted p-1 rounded">npm install -g @{BRAND_NAME.toLowerCase()}/cli</p>
-                    </li>
-                    <li>
-                      <strong className="text-foreground">Initialisez un projet</strong>
-                      <p className="text-xs mt-1">
-                        <code className="bg-muted p-0.5 rounded">{BRAND_NAME.toLowerCase()} init mon-widget</code>
-                      </p>
-                    </li>
-                    <li>
-                      <strong className="text-foreground">Développez &amp; Testez</strong>
-                      <p className="text-xs mt-1">
-                        <code className="bg-muted p-0.5 rounded">cd mon-widget && {BRAND_NAME.toLowerCase()} dev</code>
-                      </p>
-                    </li>
-                    <li>
-                      <strong className="text-foreground">Déployez</strong>
-                      <p className="text-xs mt-1">
-                        Ajoutez la clé dans le <code className="bg-muted p-0.5 rounded">.env</code> puis :
-                        <br />
-                        <code className="bg-muted p-0.5 rounded">{BRAND_NAME.toLowerCase()} deploy</code>
-                      </p>
-                    </li>
-                  </ol>
-                  <div className="mt-6 pt-4 border-t border-border p-4 bg-primary/5 rounded-lg">
-                    <p className="text-sm text-primary font-medium mb-1">💡 Besoin d'aide ?</p>
-                    <p className="text-xs text-primary/80">
-                      Consultez le <code>README.md</code> inclus dans le projet pour un guide détaillé.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  ))}
+                </ol>
+                <div className="mt-6 rounded-xl border border-primary/15 bg-primary/5 p-4">
+                  <p className="text-sm font-medium text-primary">Besoin d&apos;aide ?</p>
+                  <p className="mt-1 text-xs text-primary/80">
+                    Consultez l&apos;onglet Documentation ou le README inclus dans le projet généré
+                    par la CLI.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
-        
       </Tabs>
-      <EditWidgetModal 
-        open={selectedWidget !== null} 
-        onClose={() => setSelectedWidget(null)} 
-        widget={selectedWidget} 
+
+      <EditWidgetModal
+        open={selectedWidget !== null}
+        onClose={() => setSelectedWidget(null)}
+        widget={selectedWidget}
       />
     </div>
   );

@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from '@/lib/utils';
 import { resolveImageUrl } from '@/lib/imageUrl';
 import { toast } from 'sonner';
+import { AtmosphericHeader } from '@/components/layout/AtmosphericHeader';
 import {
   Select,
   SelectContent,
@@ -262,21 +263,11 @@ const CreateEvent = () => {
   const currentStepIndex = steps.findIndex(s => s.id === tab);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
-      <div className="space-y-0.5">
-        <h2 className="text-2xl font-bold tracking-tight">{isEditMode ? 'Modifier' : 'Créer'} un événement</h2>
-        <p className="text-xs text-muted-foreground font-medium">Configurez votre expérience.</p>
-      </div>
-
-      {!isEditMode && (
-        <Card className="border border-primary/20 bg-primary/[0.02] rounded-xl overflow-hidden shadow-sm">
-          <CardContent className="p-4 flex gap-3 items-center">
-            <div className="p-2 rounded-lg bg-primary text-white shrink-0"><Sparkles size={16} /></div>
-              <Input placeholder="Lien IA Magic (Shotgun, Instagram...)" value={aiUrl} onChange={(e) => setAiUrl(e.target.value)} />
-            <Button onClick={handleAiGenerate} size="sm" className="h-9 px-4 font-bold text-[10px] uppercase tracking-wider">Générer</Button>
-          </CardContent>
-        </Card>
-      )}
+    <div className="flex flex-col gap-8 pb-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <AtmosphericHeader
+        title={`${isEditMode ? 'Modifier' : 'Créer'} un événement`}
+        description="Configurez votre expérience de A à Z — infos, billets, formulaire et publication."
+      />
 
       {/* Stepper */}
       <div className="relative mb-8 px-6">
@@ -295,7 +286,7 @@ const CreateEvent = () => {
                 <div className={cn("relative z-10 w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all", isActive ? "bg-card border-primary shadow-sm scale-110" : isPast ? "bg-primary border-primary text-white" : "bg-card border-border text-muted-foreground")}>
                   <step.icon size={16} className={cn(isActive && "text-primary")} />
                 </div>
-                <span className={cn("text-[8px] font-black uppercase tracking-widest", isActive ? "text-primary" : "text-muted-foreground")}>{step.label}</span>
+                <span className={cn("text-xs font-semibold uppercase tracking-wider", isActive ? "text-primary" : "text-muted-foreground")}>{step.label}</span>
               </button>
             );
           })}
@@ -304,14 +295,14 @@ const CreateEvent = () => {
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsContent value="general">
-          <Card className="border-none shadow-sm rounded-2xl bg-card border border-border">
-            <CardHeader className="p-5 pb-2">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
+            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent p-5 pb-3">
               <CardTitle className="text-sm font-bold">Informations de Base</CardTitle>
             </CardHeader>
             <CardContent className="p-5 pt-4 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Communauté</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Communauté</Label>
                   <Select value={formData.communityId} onValueChange={(val: string | null) => setFormData({ ...formData, communityId: val || '' })}>
                     <SelectTrigger size="sm">
                       {communities.find(c => c.id === formData.communityId)?.name || "Choisir..."}
@@ -326,22 +317,22 @@ const CreateEvent = () => {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Titre</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Titre</Label>
                   <Input placeholder="Nom de l'événement" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Début</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Début</Label>
                   <Input type="datetime-local" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Fin</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fin</Label>
                   <Input type="datetime-local" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
                 </div>
               </div>
               <div className="space-y-1.5 relative">
-                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Lieu</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lieu</Label>
                 <div className="relative">
                   <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -380,13 +371,13 @@ const CreateEvent = () => {
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</Label>
                 <textarea className="w-full min-h-[80px] rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Image de l'événement</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Image de l'événement</Label>
                   <div className="flex gap-4 items-start">
                     {formData.image ? (
                       <div className="relative w-24 h-24 rounded-xl overflow-hidden group">
@@ -396,7 +387,7 @@ const CreateEvent = () => {
                     ) : (
                       <label className="w-24 h-24 rounded-xl border-2 border-dashed border-border bg-muted/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/20 hover:bg-primary/[0.02] transition-all group">
                         <ImageIcon size={20} className="text-muted-foreground group-hover:text-primary/40 transition-colors" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mt-2">Upload</span>
+                        <span className="mt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Upload</span>
                         <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
@@ -418,7 +409,7 @@ const CreateEvent = () => {
                       </label>
                     )}
                     <div className="flex-1 space-y-1.5">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Tags</Label>
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tags</Label>
                       <Input
                         placeholder="Sport, Musique, Networking... (séparés par des virgules)"
                         value={formData.tags.join(', ')}
@@ -429,7 +420,7 @@ const CreateEvent = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Co-organisateurs</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Co-organisateurs</Label>
                   <div className="p-3 rounded-xl border border-border bg-muted/30 space-y-2">
                     {/* Search input for members */}
                     <Input
@@ -487,22 +478,22 @@ const CreateEvent = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2"><Button onClick={() => setTab('tickets')} size="sm" className="h-9 px-8 font-bold text-[10px] uppercase tracking-wider shadow-md shadow-primary/5">Suivant</Button></div>
+              <div className="flex justify-end pt-2"><Button onClick={() => setTab('tickets')} size="sm" className="h-9 px-8 text-xs font-semibold uppercase tracking-wider shadow-md shadow-primary/5">Suivant</Button></div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="tickets" className="space-y-6">
-          <Card className="border-none shadow-sm rounded-2xl bg-card border border-border">
-            <CardHeader className="p-5 pb-0 flex justify-between items-center flex-row">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent p-5 pb-3">
               <CardTitle className="text-sm font-bold">Billetterie</CardTitle>
-              <Button variant="outline" size="sm" onClick={addTicketType} className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider"><Plus size={12} className="mr-1" /> Ajouter un tier</Button>
+              <Button variant="outline" size="sm" onClick={addTicketType} className="h-7 px-3 text-xs font-semibold uppercase tracking-wider"><Plus size={12} className="mr-1" /> Ajouter un tier</Button>
             </CardHeader>
             <CardContent className="p-5 pt-4 space-y-4">
               <div className="grid grid-cols-12 gap-3 px-3 mb-1">
-                <div className="col-span-5 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Nom du billet</div>
-                <div className="col-span-3 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Prix (€)</div>
-                <div className="col-span-3 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Quantité</div>
+                <div className="col-span-5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nom du billet</div>
+                <div className="col-span-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Prix (€)</div>
+                <div className="col-span-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quantité</div>
                 <div className="col-span-1"></div>
               </div>
 
@@ -536,15 +527,15 @@ const CreateEvent = () => {
 
                     <div className="grid grid-cols-3 gap-3 pt-1">
                       <div className="space-y-1">
-                        <Label className="text-[7px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Description (optionnel)</Label>
+                        <Label className="ml-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description (optionnel)</Label>
                         <Input placeholder="Ce qui est inclus..." value={tier.description || ''} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].description = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[7px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Début des ventes</Label>
+                        <Label className="ml-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Début des ventes</Label>
                         <Input type="datetime-local" value={tier.salesStartDate || ''} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].salesStartDate = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[7px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Fin des ventes</Label>
+                        <Label className="ml-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fin des ventes</Label>
                         <Input type="datetime-local" value={tier.salesEndDate || ''} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].salesEndDate = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
                       </div>
                     </div>
@@ -553,18 +544,18 @@ const CreateEvent = () => {
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="ghost" onClick={() => setTab('general')} className="h-9 text-[10px] uppercase font-bold tracking-wider">Retour</Button>
-                <Button onClick={() => setTab('form')} size="sm" className="h-9 px-8 font-bold text-[10px] uppercase tracking-wider shadow-md shadow-primary/5">Suivant</Button>
+                <Button variant="ghost" onClick={() => setTab('general')} className="h-9 text-xs font-semibold uppercase tracking-wider">Retour</Button>
+                <Button onClick={() => setTab('form')} size="sm" className="h-9 px-8 text-xs font-semibold uppercase tracking-wider shadow-md shadow-primary/5">Suivant</Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="form" className="space-y-6">
-          <Card className="border-none shadow-sm rounded-2xl bg-card border border-border">
-            <CardHeader className="p-5 pb-2 flex justify-between items-center flex-row">
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent p-5 pb-3">
               <CardTitle className="text-sm font-bold">Questionnaire de vente</CardTitle>
-              <Button variant="outline" size="sm" onClick={addCustomField} className="h-7 px-3 text-[9px] font-bold uppercase"><Plus size={12} className="mr-1" /> Ajouter</Button>
+              <Button variant="outline" size="sm" onClick={addCustomField} className="h-7 px-3 text-xs font-semibold uppercase"><Plus size={12} className="mr-1" /> Ajouter</Button>
             </CardHeader>
             <CardContent className="p-5 pt-4 space-y-4">
               <div className="space-y-3">
@@ -617,8 +608,8 @@ const CreateEvent = () => {
                   </div>
                 ))}
                 {formData.customFields.length === 0 && (
-                  <div className="text-center py-6 border-2 border-dashed border-border rounded-xl">
-                    <p className="text-[10px] text-muted-foreground opacity-60">Aucune question personnalisée</p>
+                  <div className="rounded-xl border-2 border-dashed border-border/80 bg-muted/20 py-6 text-center">
+                    <p className="text-xs text-muted-foreground">Aucune question personnalisée</p>
                   </div>
                 )}
               </div>
@@ -627,11 +618,11 @@ const CreateEvent = () => {
                 <div className={cn("p-4 rounded-xl border-2 transition-all", formData.isRecurring ? "border-primary bg-primary/[0.02]" : "border-border bg-muted/30")}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest">Récurrence</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider">Récurrence</span>
                     </div>
                     <button
                       onClick={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })}
-                      className={cn("text-[8px] font-black uppercase px-2.5 py-1 rounded-lg transition-all", formData.isRecurring ? "bg-primary text-white shadow-sm" : "bg-muted text-muted-foreground")}
+                      className={cn("rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition-all", formData.isRecurring ? "bg-primary text-white shadow-sm" : "bg-muted text-muted-foreground")}
                     >
                       {formData.isRecurring ? 'Activé' : 'Désactivé'}
                     </button>
@@ -653,7 +644,7 @@ const CreateEvent = () => {
                 <div className={cn("p-4 rounded-xl border-2 transition-all", formData.isOnline ? "border-primary bg-primary/[0.02]" : "border-border bg-muted/30")}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest">En Ligne</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider">En Ligne</span>
                     </div>
                     <button
                       onClick={() => {
@@ -667,7 +658,7 @@ const CreateEvent = () => {
                           ticketTypes: updatedTicketTypes
                         });
                       }}
-                      className={cn("text-[8px] font-black uppercase px-2.5 py-1 rounded-lg transition-all", formData.isOnline ? "bg-primary text-white shadow-sm" : "bg-muted text-muted-foreground")}
+                      className={cn("rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition-all", formData.isOnline ? "bg-primary text-white shadow-sm" : "bg-muted text-muted-foreground")}
                     >
                       {formData.isOnline ? 'Activé' : 'Désactivé'}
                     </button>
@@ -681,14 +672,14 @@ const CreateEvent = () => {
                   )}
                 </div>
               </div>
-              <div className="flex justify-between pt-4"><Button variant="ghost" onClick={() => setTab('tickets')} className="h-9 text-[10px] uppercase font-bold">Retour</Button><Button onClick={() => setTab('visibility')} size="sm" className="h-9 px-6 font-bold text-[10px] uppercase">Suivant</Button></div>
+              <div className="flex justify-between pt-4"><Button variant="ghost" onClick={() => setTab('tickets')} className="h-9 text-xs font-semibold uppercase">Retour</Button><Button onClick={() => setTab('visibility')} size="sm" className="h-9 px-6 text-xs font-semibold uppercase">Suivant</Button></div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="visibility">
-          <Card className="border-none shadow-sm rounded-2xl bg-card border border-border">
-            <CardHeader className="p-5 pb-2"><CardTitle className="text-sm font-bold">Publication</CardTitle></CardHeader>
+          <Card className="rounded-2xl border border-border/80 bg-card shadow-klyb-sm">
+            <CardHeader className="border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent p-5 pb-3"><CardTitle className="text-sm font-bold">Publication</CardTitle></CardHeader>
             <CardContent className="p-5 pt-4 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div onClick={() => setFormData({ ...formData, visibility: 'public' })} className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all", formData.visibility === 'public' ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-muted/30 hover:border-border")}>
@@ -703,7 +694,7 @@ const CreateEvent = () => {
 
               {/* Short link */}
               <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Lien court (optionnel)</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lien court (optionnel)</Label>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground shrink-0">app.klyb.app/e/</span>
                   <Input
@@ -723,7 +714,7 @@ const CreateEvent = () => {
                 )}
               </div>
 
-              <div className="flex justify-between items-center pt-4"><Button variant="ghost" onClick={() => setTab('form')} className="h-9 text-[10px] uppercase font-bold">Retour</Button><Button onClick={handleSubmit} disabled={submitting} size="sm" className="h-10 px-8 font-bold text-[10px] uppercase tracking-wider shadow-lg shadow-primary/20">{submitting ? <Loader2 className="animate-spin h-4 w-4" /> : 'Publier'}</Button></div>
+              <div className="flex justify-between items-center pt-4"><Button variant="ghost" onClick={() => setTab('form')} className="h-9 text-xs font-semibold uppercase">Retour</Button><Button onClick={handleSubmit} disabled={submitting} size="sm" className="h-10 px-8 text-xs font-semibold uppercase tracking-wider shadow-lg shadow-primary/20">{submitting ? <Loader2 className="animate-spin h-4 w-4" /> : 'Publier'}</Button></div>
             </CardContent>
           </Card>
         </TabsContent>

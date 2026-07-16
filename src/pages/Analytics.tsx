@@ -38,9 +38,9 @@ import { Link } from "react-router-dom"
 import { eventService } from "@/services/api"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { PageHeader } from "@/components/layout/PageHeader"
 import { PageLoader } from "@/components/layout/PageLoader"
 import { StatCard } from "@/components/layout/StatCard"
+import { AtmosphericHeader } from "@/components/layout/AtmosphericHeader"
 import { KLYB_COLORS } from "@/constants/colors"
 import { toast } from "sonner"
 import { useCommunity } from "@/context/CommunityContext"
@@ -54,6 +54,13 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { resolveImageUrl } from "@/lib/imageUrl"
 
 const PERIOD_OPTIONS = [
@@ -184,7 +191,7 @@ const Analytics = () => {
 
   return (
     <div className="flex flex-col gap-8 pb-12">
-      <PageHeader
+      <AtmosphericHeader
         title="Statistiques événements"
         description="Dashboard analytique complet de vos événements"
         actions={
@@ -273,7 +280,7 @@ const Analytics = () => {
       </div>
 
       {/* Revenus + inscriptions combinés */}
-      <Card className="shadow-klyb-sm">
+      <Card className="border-border/80 shadow-klyb-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="size-4 text-primary" />
@@ -358,7 +365,7 @@ const Analytics = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Entonnoir de conversion */}
-        <Card className="shadow-klyb-sm">
+        <Card className="border-border/80 shadow-klyb-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="size-4 text-primary" />
@@ -368,7 +375,17 @@ const Analytics = () => {
           </CardHeader>
           <CardContent>
             {funnelData.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">Aucune donnée</p>
+              <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-12">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <BarChart3 />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-sm">Aucune donnée</EmptyTitle>
+                  <EmptyDescription>
+                    Les données d'entonnoir apparaîtront lorsque des participants interagiront avec vos événements.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="h-[260px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -404,14 +421,24 @@ const Analytics = () => {
         </Card>
 
         {/* Répartition par statut */}
-        <Card className="shadow-klyb-sm">
+        <Card className="border-border/80 shadow-klyb-sm">
           <CardHeader>
             <CardTitle>Répartition par statut</CardTitle>
             <CardDescription>État de vos événements</CardDescription>
           </CardHeader>
           <CardContent>
             {statusData.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">Aucun événement</p>
+              <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-12">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <CalendarIcon />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-sm">Aucun événement</EmptyTitle>
+                  <EmptyDescription>
+                    Créez des événements pour voir leur répartition par statut.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="h-[260px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -452,14 +479,24 @@ const Analytics = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Performance par type de billet */}
-        <Card className="shadow-klyb-sm">
+        <Card className="border-border/80 shadow-klyb-sm">
           <CardHeader>
             <CardTitle>Performance par type de billet</CardTitle>
             <CardDescription>Revenus par catégorie de billet</CardDescription>
           </CardHeader>
           <CardContent>
             {!data?.ticketTypePerformance?.length ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">Aucun billet configuré</p>
+              <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-12">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Ticket />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-sm">Aucun billet configuré</EmptyTitle>
+                  <EmptyDescription>
+                    Configurez des types de billets sur vos événements pour voir leurs performances.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="h-[260px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -500,7 +537,7 @@ const Analytics = () => {
         </Card>
 
         {/* Vélocité check-in */}
-        <Card className="shadow-klyb-sm">
+        <Card className="border-border/80 shadow-klyb-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="size-4 text-primary" />
@@ -555,7 +592,7 @@ const Analytics = () => {
 
       {/* Codes promo */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="shadow-klyb-sm">
+        <Card className="border-border/80 shadow-klyb-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Tag className="size-4 text-primary" />
@@ -567,7 +604,7 @@ const Analytics = () => {
             <p className="text-xs text-muted-foreground mt-1">Total créés</p>
           </CardContent>
         </Card>
-        <Card className="shadow-klyb-sm">
+        <Card className="border-border/80 shadow-klyb-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Codes actifs</CardTitle>
           </CardHeader>
@@ -578,7 +615,7 @@ const Analytics = () => {
             <p className="text-xs text-muted-foreground mt-1">Encore valides</p>
           </CardContent>
         </Card>
-        <Card className="shadow-klyb-sm">
+        <Card className="border-border/80 shadow-klyb-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Utilisations</CardTitle>
           </CardHeader>
@@ -592,14 +629,24 @@ const Analytics = () => {
       </div>
 
       {/* Top événements */}
-      <Card className="shadow-klyb-sm">
+      <Card className="border-border/80 shadow-klyb-sm">
         <CardHeader>
           <CardTitle>Classement événements</CardTitle>
           <CardDescription>Performance détaillée par événement</CardDescription>
         </CardHeader>
         <CardContent>
           {!data?.topEvents?.length ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">Aucune donnée</p>
+            <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <TrendingUp />
+                </EmptyMedia>
+                <EmptyTitle className="text-sm">Aucune donnée</EmptyTitle>
+                <EmptyDescription>
+                  Les performances de vos événements apparaîtront ici une fois des inscriptions enregistrées.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="flex flex-col gap-2">
               {data.topEvents.map((event, i) => (
@@ -664,14 +711,24 @@ const Analytics = () => {
       </Card>
 
       {/* Activité récente */}
-      <Card className="shadow-klyb-sm">
+      <Card className="border-border/80 shadow-klyb-sm">
         <CardHeader>
           <CardTitle>Activité récente</CardTitle>
           <CardDescription>Dernières inscriptions</CardDescription>
         </CardHeader>
         <CardContent>
           {!data?.recentActivity?.length ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Aucune activité récente</p>
+            <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-8">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Activity />
+                </EmptyMedia>
+                <EmptyTitle className="text-sm">Aucune activité récente</EmptyTitle>
+                <EmptyDescription>
+                  Les dernières inscriptions s'afficheront ici au fur et à mesure.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="flex flex-col gap-3">
               {data.recentActivity.map((activity) => (

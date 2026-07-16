@@ -12,7 +12,7 @@ import {
 import { useCommunity } from "@/context/CommunityContext"
 import { useCommunitySettings, type SettingsTab } from "@/hooks/useCommunitySettings"
 import { CommunityGate } from "@/components/layout/CommunityGate"
-import { PageHeader } from "@/components/layout/PageHeader"
+import { AtmosphericHeader } from "@/components/layout/AtmosphericHeader"
 import { PageLoader } from "@/components/layout/PageLoader"
 import { SettingsSection, SettingsField } from "@/components/settings/SettingsSection"
 import { Button } from "@/components/ui/button"
@@ -104,7 +104,7 @@ const CommunitySettings = () => {
   return (
     <CommunityGate>
     <div className="flex flex-col gap-8 pb-12">
-      <PageHeader
+      <AtmosphericHeader
         title="Paramètres"
         description={selectedCommunity?.name || community.name}
       />
@@ -120,10 +120,10 @@ const CommunitySettings = () => {
                 type="button"
                 onClick={() => setTab(item.id)}
                 className={cn(
-                  "flex min-w-[140px] flex-col items-start gap-0.5 rounded-xl border px-4 py-3 text-left transition-colors lg:min-w-0 lg:w-full",
+                  "flex min-w-[140px] flex-col items-start gap-0.5 rounded-xl px-4 py-3 text-left transition-all duration-200 lg:min-w-0 lg:w-full",
                   isActive
-                    ? "border-primary/30 bg-primary/5 text-foreground"
-                    : "border-transparent bg-transparent text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 <span className="flex items-center gap-2 text-sm font-medium">

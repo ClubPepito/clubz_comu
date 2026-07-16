@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   Download,
   Calendar as CalendarIcon,
+  Sparkles,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -21,7 +22,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { PageHeader } from "@/components/layout/PageHeader"
+import { AtmosphericHeader } from "@/components/layout/AtmosphericHeader"
 import { StatCard } from "@/components/layout/StatCard"
 import { PageLoader } from "@/components/layout/PageLoader"
 import { useCommunity } from "@/context/CommunityContext"
@@ -75,7 +76,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col gap-8 pb-12">
-      <PageHeader
+      <AtmosphericHeader
         title="Vue d'ensemble"
         description="Statistiques de votre écosystème communautaire"
         actions={
@@ -91,6 +92,16 @@ const Dashboard = () => {
               </Button>
             </Link>
           </>
+        }
+        meta={
+          !loading ? (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Sparkles className="size-3.5 text-primary" />
+              {stats.activeEvents} événement{stats.activeEvents !== "1" ? "s" : ""} actif
+              {stats.activeEvents !== "1" ? "s" : ""} · {stats.members} inscrit
+              {stats.members !== "1" ? "s" : ""}
+            </p>
+          ) : undefined
         }
       />
 
@@ -120,8 +131,8 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-12">
-        <Card className="lg:col-span-8 shadow-klyb-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="border-border/80 lg:col-span-8 shadow-klyb-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent">
             <div>
               <CardTitle>Événements en cours</CardTitle>
               <CardDescription>Gestion de proximité</CardDescription>
@@ -130,16 +141,16 @@ const Dashboard = () => {
               <Button variant="ghost" size="sm">Tout voir</Button>
             </Link>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {loading ? (
               <PageLoader label="Chargement des événements…" className="min-h-[200px]" />
             ) : events.length === 0 ? (
-              <Empty className="border-border bg-muted/30">
+              <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-12">
                 <EmptyHeader>
-                  <EmptyMedia variant="icon">
+                  <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-primary/10 text-primary [&_svg]:size-5">
                     <CalendarIcon />
                   </EmptyMedia>
-                  <EmptyTitle>Aucun événement</EmptyTitle>
+                  <EmptyTitle className="text-base">Aucun événement</EmptyTitle>
                   <EmptyDescription>Prêt pour votre prochain succès ?</EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
@@ -149,7 +160,7 @@ const Dashboard = () => {
                 </EmptyContent>
               </Empty>
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3">
                 {events.map((event) => {
                   const participation = Math.min(
                     100,
@@ -158,7 +169,7 @@ const Dashboard = () => {
                   return (
                     <div
                       key={event.id}
-                      className="group flex items-center gap-4 rounded-xl border border-transparent p-3 transition-colors hover:border-border hover:bg-muted/40"
+                      className="group flex items-center gap-4 rounded-2xl border border-transparent p-3 transition-all hover:border-border/80 hover:bg-muted/40 hover:shadow-klyb-sm"
                     >
                       <div className="size-16 shrink-0 overflow-hidden rounded-xl shadow-klyb-sm">
                         <img
@@ -212,14 +223,19 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-4 shadow-klyb-sm">
-          <CardHeader>
+        <Card className="border-border/80 lg:col-span-4 shadow-klyb-sm">
+          <CardHeader className="border-b border-border/40 bg-gradient-to-r from-muted/30 to-transparent">
             <CardTitle>Activité récente</CardTitle>
             <CardDescription>Dernières interactions</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {activity.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">Aucune activité.</p>
+              <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-10">
+                <EmptyHeader>
+                  <EmptyTitle>Aucune activité</EmptyTitle>
+                  <EmptyDescription>Les inscriptions récentes apparaîtront ici.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="flex flex-col gap-6">
                 {activity.map((item, i) => (

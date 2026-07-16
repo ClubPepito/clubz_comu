@@ -2,7 +2,7 @@ import { Check, XCircle, UserPlus } from "lucide-react"
 import { useCommunity } from "@/context/CommunityContext"
 import { useMembershipRequests } from "@/hooks/useMembershipRequests"
 import { CommunityGate } from "@/components/layout/CommunityGate"
-import { PageHeader } from "@/components/layout/PageHeader"
+import { AtmosphericHeader } from "@/components/layout/AtmosphericHeader"
 import { PageLoader } from "@/components/layout/PageLoader"
 import { SettingsSection } from "@/components/settings/SettingsSection"
 import { Button } from "@/components/ui/button"
@@ -32,7 +32,7 @@ export default function MembershipRequests() {
       description="Sélectionnez une communauté pour gérer les demandes d'adhésion."
     >
       <div className="flex flex-col gap-8 pb-12">
-        <PageHeader
+        <AtmosphericHeader
           title="Adhésions"
           description={
             selectedCommunity
@@ -51,7 +51,7 @@ export default function MembershipRequests() {
         {loading ? (
           <PageLoader label="Chargement des demandes…" />
         ) : requests.length === 0 ? (
-          <Empty className="border-border bg-card py-16">
+          <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <UserPlus />
@@ -72,7 +72,7 @@ export default function MembershipRequests() {
               {requests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex flex-col gap-4 rounded-xl border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-4 rounded-2xl border border-border/80 bg-card p-4 shadow-klyb-sm transition-colors hover:border-border sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="size-11">

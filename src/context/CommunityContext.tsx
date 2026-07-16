@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { communityService } from "../services/api"
 import { useAuth } from "./AuthContext"
+import { canEditCommunity } from "../lib/communityPermissions"
 
 interface Community {
   id: string
@@ -9,6 +10,12 @@ interface Community {
   coverImage?: string
   primaryColor?: string
   secondaryColor?: string
+  userId?: string
+  userMembership?: {
+    role?: {
+      permissions?: string[]
+    } | null
+  } | null
 }
 
 interface CommunityContextType {
@@ -44,8 +51,18 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     try {
       setLoading(true)
-      const res = await communityService.getAll()
-      setCommunities(res.data || [])
+      const res = await communityService.getMine()
+      const list: Community[] = (res.data || []).filter((c: Community) =>
+        canEditCommunity(c, user?.id)
+      )
+      setCommunities(list)
+
+      // Always select a valid community: keep current if still accessible, else first
+      setSelectedCommunityId((current) => {
+        if (list.length === 0) return null
+        if (current && list.some((c) => c.id === current)) return current
+        return list[0]!.id
+      })
     } catch (err) {
       console.error("Failed to fetch communities", err)
     } finally {

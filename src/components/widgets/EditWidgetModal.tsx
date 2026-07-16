@@ -142,67 +142,97 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
 
   if (!widget) return null;
 
+  const statusLabel =
+    widget.status === 'draft'
+      ? 'Brouillon'
+      : widget.status === 'pending'
+        ? 'En attente'
+        : widget.status === 'validated'
+          ? 'Validé'
+          : widget.status === 'rejected'
+            ? 'Rejeté'
+            : widget.status;
+
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
       <DialogContent className="sm:max-w-[850px] h-[85vh] max-h-[85vh] flex flex-col p-0 overflow-hidden gap-0">
-        <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
-          <DialogTitle>Paramétrage du Widget : {widget.name}</DialogTitle>
+        <DialogHeader className="shrink-0 border-b border-border/60 bg-gradient-to-br from-secondary/40 via-card to-accent/20 px-6 py-5">
+          <div className="flex items-start gap-3 pr-8">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-klyb-sm">
+              <Settings className="size-4" />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <DialogTitle className="truncate text-lg font-bold tracking-tight">
+                {widget.name}
+              </DialogTitle>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <Badge variant="secondary" className="capitalize text-[10px]">
+                  {statusLabel}
+                </Badge>
+                {widget.semanticVersion && (
+                  <span className="font-mono">v{widget.semanticVersion}</span>
+                )}
+                <span aria-hidden>·</span>
+                <span>Paramétrage développeur</span>
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 rounded-xl overflow-x-auto">
-              <TabsTrigger value="info" className="gap-2 rounded-lg data-[state=active]:bg-background"><Info className="w-4 h-4"/> Infos</TabsTrigger>
-              <TabsTrigger value="validation" className="gap-2 rounded-lg data-[state=active]:bg-background"><ShieldCheck className="w-4 h-4"/> Validation</TabsTrigger>
-              <TabsTrigger value="preview" className="gap-2 rounded-lg data-[state=active]:bg-background"><MonitorPlay className="w-4 h-4"/> Aperçu</TabsTrigger>
-              <TabsTrigger value="manifest" className="gap-2 rounded-lg data-[state=active]:bg-background"><FileJson className="w-4 h-4"/> Manifeste</TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2 rounded-lg data-[state=active]:bg-background"><Settings className="w-4 h-4"/> Réglages</TabsTrigger>
-              <TabsTrigger value="env" className="gap-2 rounded-lg data-[state=active]:bg-background"><Lock className="w-4 h-4"/> Env</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 gap-1 overflow-x-auto rounded-xl border border-border/50 bg-muted/40 p-1 sm:grid-cols-6">
+              <TabsTrigger value="info" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"><Info className="w-3.5 h-3.5"/> Infos</TabsTrigger>
+              <TabsTrigger value="validation" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"><ShieldCheck className="w-3.5 h-3.5"/> Validation</TabsTrigger>
+              <TabsTrigger value="preview" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"><MonitorPlay className="w-3.5 h-3.5"/> Aperçu</TabsTrigger>
+              <TabsTrigger value="manifest" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"><FileJson className="w-3.5 h-3.5"/> Manifeste</TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"><Settings className="w-3.5 h-3.5"/> Réglages</TabsTrigger>
+              <TabsTrigger value="env" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"><Lock className="w-3.5 h-3.5"/> Env</TabsTrigger>
             </TabsList>
 
             {/* TAB: Informations */}
-            <TabsContent value="info" className="mt-4 space-y-4">
-              <div className="bg-muted/30 border border-border rounded-xl p-6">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Aperçu Marketplace</h3>
-                <div className="bg-background rounded-lg border border-border p-5 shadow-sm text-left">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h4 className="text-xl font-bold text-foreground">{manifestData.name || 'Widget Sans Nom'}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">Par {widget.author?.name || 'vous'}</p>
+            <TabsContent value="info" className="mt-5 space-y-4">
+              <div className="rounded-2xl border border-border/70 bg-muted/20 p-6">
+                <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Aperçu Marketplace</h3>
+                <div className="rounded-xl border border-border/80 bg-card p-5 text-left shadow-klyb-sm">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h4 className="truncate text-lg font-bold tracking-tight text-foreground">{manifestData.name || 'Widget Sans Nom'}</h4>
+                      <p className="mt-1 text-sm text-muted-foreground">Par {widget.author?.name || 'vous'}</p>
                     </div>
-                    <Badge variant="secondary" className="font-mono">{manifestData.version || '1.0.0'}</Badge>
+                    <Badge variant="secondary" className="shrink-0 font-mono text-[10px]">{manifestData.version || '1.0.0'}</Badge>
                   </div>
-                  <p className="text-sm text-foreground line-clamp-3">
+                  <p className="line-clamp-3 text-sm leading-relaxed text-foreground/90">
                     {manifestData.description || 'Aucune description fournie pour ce widget.'}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-muted/30 border border-border rounded-xl p-6 text-left">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Détails Techniques</h3>
+              <div className="rounded-2xl border border-border/70 bg-muted/20 p-6 text-left">
+                <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Détails techniques</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground block text-xs">ID du Widget</span>
-                    <span className="font-mono text-xs">{widget.id}</span>
+                  <div className="rounded-xl border border-border/60 bg-card p-3">
+                    <span className="mb-1 block text-[11px] text-muted-foreground">ID du Widget</span>
+                    <span className="break-all font-mono text-xs">{widget.id}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Statut</span>
-                    <Badge variant={widget.status === 'validated' ? 'default' : 'secondary'} className="mt-1 capitalize">
-                      {widget.status}
+                  <div className="rounded-xl border border-border/60 bg-card p-3">
+                    <span className="mb-1 block text-[11px] text-muted-foreground">Statut</span>
+                    <Badge variant={widget.status === 'validated' ? 'default' : 'secondary'} className="mt-0.5 capitalize">
+                      {statusLabel}
                     </Badge>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Créé le</span>
+                  <div className="rounded-xl border border-border/60 bg-card p-3">
+                    <span className="mb-1 block text-[11px] text-muted-foreground">Créé le</span>
                     <span>{new Date(widget.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Dernière mise à jour</span>
+                  <div className="rounded-xl border border-border/60 bg-card p-3">
+                    <span className="mb-1 block text-[11px] text-muted-foreground">Dernière mise à jour</span>
                     <span>{new Date(widget.updatedAt).toLocaleDateString()} à {new Date(widget.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   {widget.tags && widget.tags.length > 0 && (
-                    <div className="col-span-2">
-                      <span className="text-muted-foreground block text-xs mb-1">Tags</span>
-                      <div className="flex gap-1 flex-wrap">
+                    <div className="col-span-2 rounded-xl border border-border/60 bg-card p-3">
+                      <span className="mb-2 block text-[11px] text-muted-foreground">Tags</span>
+                      <div className="flex flex-wrap gap-1.5">
                         {widget.tags.map((tag, idx) => (
                           <Badge key={idx} variant="outline" className="text-xs">{tag}</Badge>
                         ))}
@@ -214,22 +244,25 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
             </TabsContent>
 
             {/* TAB: Aperçu (Sandbox) */}
-            <TabsContent value="preview" className="mt-4">
-              <div className="bg-muted/30 border border-border rounded-xl p-4 overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+            <TabsContent value="preview" className="mt-5">
+              <div className="flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-secondary/50 via-muted/40 to-accent/40 p-4">
                 {widget.remoteUrl ? (
                   <WidgetRunner
                     widgetId={widget.id}
                     remoteUrl={widget.remoteUrl}
                     name={widget.name}
                     config={previewValues}
-                    className="w-full h-[500px] border border-border/50 rounded-lg shadow-inner bg-white"
+                    className="h-[500px] w-full rounded-xl border border-border/50 bg-white shadow-klyb"
                   />
                 ) : (
-                  <div className="text-center space-y-3">
-                    <MonitorPlay className="w-12 h-12 text-muted-foreground/50 mx-auto" />
-                    <p className="text-muted-foreground text-sm max-w-sm">
-                      Aucun aperçu disponible. <br/>
-                      Vous devez déployer votre widget au moins une fois via la CLI pour générer un lien d'aperçu.
+                  <div className="space-y-3 text-center">
+                    <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                      <MonitorPlay className="size-6" />
+                    </div>
+                    <p className="max-w-sm text-sm text-muted-foreground">
+                      Aucun aperçu disponible.
+                      <br />
+                      Déployez votre widget au moins une fois via la CLI pour générer un lien d&apos;aperçu.
                     </p>
                   </div>
                 )}
@@ -237,7 +270,7 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
             </TabsContent>
 
             {/* TAB: Manifeste */}
-            <TabsContent value="manifest" className="mt-4 space-y-4 text-left">
+            <TabsContent value="manifest" className="mt-5 space-y-4 text-left">
               <div>
                 <Label className="text-sm font-medium mb-1 block">Nom du Widget</Label>
                 <Input 
@@ -266,10 +299,10 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
             </TabsContent>
 
             {/* TAB: Réglages */}
-            <TabsContent value="settings" className="mt-4 space-y-4">
-              <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5 border-b border-border/50 pb-2">
-                  <Eye className="w-4 h-4 text-indigo-500" /> Aperçu du formulaire de configuration
+            <TabsContent value="settings" className="mt-5 space-y-4">
+              <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-5">
+                <h3 className="flex items-center gap-1.5 border-b border-border/50 pb-2 text-sm font-bold text-foreground">
+                  <Eye className="size-4 text-primary" /> Aperçu du formulaire de configuration
                 </h3>
                 <p className="text-[11px] text-muted-foreground leading-normal">
                   Ceci est un aperçu en lecture seule. La configuration finale sera effectuée par l'administrateur de chaque communauté lors de l'installation.
@@ -329,11 +362,11 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
             </TabsContent>
 
             {/* TAB: Env */}
-            <TabsContent value="env" className="mt-4 space-y-4">
-              <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4 text-left">
+            <TabsContent value="env" className="mt-5 space-y-4">
+              <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-5 text-left">
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                    <Lock className="w-4 h-4 text-emerald-500" /> Variables d'environnement
+                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+                    <Lock className="size-4 text-emerald-600" /> Variables d&apos;environnement
                   </h3>
                   <p className="text-[11px] text-muted-foreground leading-normal">
                     Définissez ici des secrets ou variables nécessaires au bon fonctionnement de votre widget côté serveur (clés d'API, tokens, etc.).
@@ -399,11 +432,13 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
             </TabsContent>
 
             {/* TAB: Validation */}
-            {/* TAB: Validation */}
-            <TabsContent value="validation" className="mt-4 space-y-4">
-              <div className="bg-muted/30 border border-border rounded-xl p-6 text-left">
-                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-indigo-500" /> Validation Marketplace
+            <TabsContent value="validation" className="mt-5 space-y-4">
+              <div className="rounded-2xl border border-border/70 bg-muted/20 p-6 text-left">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <ShieldCheck className="size-4" />
+                  </span>
+                  Validation Marketplace
                 </h3>
                 
                 <div className="space-y-6">
@@ -508,7 +543,7 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
                     )}
 
                     {widget.status === 'validated' && (
-                      <div className="text-center py-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg font-medium">
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 py-4 text-center text-sm font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
                         Félicitations ! Votre widget est validé.
                       </div>
                     )}
@@ -519,20 +554,18 @@ export function EditWidgetModal({ open, onClose, widget }: Props) {
           </Tabs>
         </div>
 
-        <div className="px-6 py-4 border-t border-border shrink-0 bg-muted/10">
-          <Button 
-            className="w-full gap-2" 
+        <div className="shrink-0 border-t border-border/60 bg-muted/20 px-6 py-4">
+          <Button
+            className="w-full gap-2"
             onClick={handleSave}
             disabled={isSaving}
           >
             {isSaving ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Sauvegarde...
+                <Loader2 className="w-4 h-4 animate-spin" /> Sauvegarde…
               </>
             ) : (
-              <>
-                Sauvegarder les paramètres
-              </>
+              <>Sauvegarder les paramètres</>
             )}
           </Button>
         </div>

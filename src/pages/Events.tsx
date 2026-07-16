@@ -3,7 +3,6 @@ import { useCommunity } from "@/context/CommunityContext"
 import {
   Search,
   Plus,
-  Calendar,
   MapPin,
   MoreVertical,
   ExternalLink,
@@ -31,13 +30,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -45,7 +37,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { PageHeader } from "@/components/layout/PageHeader"
+import { AtmosphericHeader } from "@/components/layout/AtmosphericHeader"
+import { FilterBar } from "@/components/layout/FilterBar"
 import { PageLoader } from "@/components/layout/PageLoader"
 import { CommunityGate } from "@/components/layout/CommunityGate"
 import { toast } from "sonner"
@@ -107,6 +100,18 @@ const Events = () => {
 
   const now = new Date()
 
+  const statusCounts = useMemo(() => {
+    const counts = { all: events.length, upcoming: 0, past: 0, published: 0, draft: 0 }
+    for (const e of events) {
+      const startDate = new Date(e.startDate)
+      if (startDate >= now) counts.upcoming++
+      else counts.past++
+      if (e.visibility === "public") counts.published++
+      else counts.draft++
+    }
+    return counts
+  }, [events])
+
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
       const matchesSearch =
@@ -133,13 +138,21 @@ const Events = () => {
 
   const hasActiveFilter = statusFilter !== "all" || searchTerm !== ""
 
+  const FILTER_OPTIONS = [
+    { value: "all", label: "Tous", count: statusCounts.all },
+    { value: "upcoming", label: "À venir", count: statusCounts.upcoming },
+    { value: "past", label: "Passés", count: statusCounts.past },
+    { value: "published", label: "Publiés", count: statusCounts.published },
+    { value: "draft", label: "Privés", count: statusCounts.draft },
+  ] as const
+
   return (
     <CommunityGate
       title="Sélectionnez une communauté"
       description="Choisissez une communauté pour gérer ses événements."
     >
-      <div className="flex flex-col gap-8 pb-10">
-        <PageHeader
+      <div className="flex flex-col gap-8 pb-12">
+        <AtmosphericHeader
           title="Mes Événements"
           description="Gérez vos prochains événements"
           actions={
@@ -152,33 +165,24 @@ const Events = () => {
               </Link>
             ) : null
           }
-        />
-
-        <div className="flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center">
-          <div className="relative w-full md:w-80">
-            <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" size={16} />
+        >
+          <div className="relative w-full md:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Rechercher un événement…"
-              className="pl-9"
+              className="h-11 rounded-xl border-border/80 bg-card/90 pl-9 shadow-sm backdrop-blur-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-              <SelectTrigger size="sm" className="w-40">
-                <Calendar data-icon="inline-start" size={14} />
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="upcoming">À venir</SelectItem>
-                <SelectItem value="past">Passés</SelectItem>
-                <SelectItem value="published">Publiés</SelectItem>
-                <SelectItem value="draft">Privés</SelectItem>
-              </SelectContent>
-            </Select>
-            {hasActiveFilter && (
+        </AtmosphericHeader>
+
+        <FilterBar
+          options={FILTER_OPTIONS.map((o) => ({ ...o }))}
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as StatusFilter)}
+          trailing={
+            hasActiveFilter ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -188,14 +192,14 @@ const Events = () => {
                 <X size={14} data-icon="inline-start" />
                 Réinitialiser
               </Button>
-            )}
-          </div>
-        </div>
+            ) : undefined
+          }
+        />
 
         {loading ? (
           <PageLoader label="Récupération des événements…" />
         ) : filteredEvents.length === 0 ? (
-          <Empty className="border-border bg-card py-16">
+          <Empty className="border-2 border-dashed border-border/80 bg-muted/20 py-16">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <Ticket />
@@ -222,7 +226,7 @@ const Events = () => {
               return (
                 <Card
                   key={event.id}
-                  className="group overflow-hidden p-0 shadow-klyb-sm transition-shadow hover:shadow-klyb"
+                  className="group overflow-hidden rounded-2xl border-border/80 p-0 shadow-klyb-sm transition-shadow hover:shadow-klyb"
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <img

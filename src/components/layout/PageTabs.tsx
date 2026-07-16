@@ -3,9 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 const pageTabsListClass =
-  "mb-6 h-11 w-fit gap-1 rounded-xl border border-border bg-muted/50 p-1 shadow-klyb-sm"
+  "mb-6 h-11 w-fit gap-1 rounded-xl border border-border/50 bg-muted/40 p-1"
 
-const pageTabsTriggerClass = "h-9 rounded-lg px-4"
+const pageTabsTriggerClass =
+  "h-9 rounded-lg px-4 data-[state=active]:shadow-sm"
 
 type PageTabsProps = React.ComponentProps<typeof Tabs>
 

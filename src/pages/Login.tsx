@@ -79,7 +79,7 @@ const Login = () => {
           </p>
         </div>
 
-        <Card className="overflow-hidden border-border/60 shadow-klyb">
+        <Card className="overflow-hidden rounded-2xl border border-border/60 shadow-klyb">
           <CardHeader className="gap-1">
             <CardTitle className="text-xl">Connexion</CardTitle>
             <CardDescription>Entrez vos accès organisateur pour continuer.</CardDescription>
@@ -94,7 +94,7 @@ const Login = () => {
                     id="email"
                     type="email"
                     placeholder={`organisateur@${BRAND_DOMAIN}`}
-                    className="h-11 pl-10"
+                    className="h-11 rounded-xl pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -119,7 +119,7 @@ const Login = () => {
                     id="password"
                     type="password"
                     placeholder="••••••••••••"
-                    className="h-11 pl-10"
+                    className="h-11 rounded-xl pl-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
